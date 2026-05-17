@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm install && npm run build --workspace=web",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "echo skip",
+  "framework": "nextjs"
+}
