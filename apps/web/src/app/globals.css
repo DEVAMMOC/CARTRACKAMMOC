@@ -39,6 +39,10 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-surface: var(--brand-surface);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -49,38 +53,44 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* AMMOC institutional palette */
+  --brand-primary: #2D6A4F;
+  --brand-secondary: #1D3557;
+  --brand-accent: #52B788;
+  --brand-surface: #F8F9FA;
+
+  --background: #ffffff;
+  --foreground: #1D3557;
+  --card: #ffffff;
+  --card-foreground: #1D3557;
+  --popover: #ffffff;
+  --popover-foreground: #1D3557;
+  --primary: #2D6A4F;
+  --primary-foreground: #ffffff;
+  --secondary: #F1F3F5;
+  --secondary-foreground: #1D3557;
+  --muted: #F8F9FA;
+  --muted-foreground: #6c757d;
+  --accent: #E6F4EA;
+  --accent-foreground: #1D3557;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #2D6A4F;
+  --chart-1: #2D6A4F;
+  --chart-2: #1D3557;
+  --chart-3: #52B788;
+  --chart-4: #74C69D;
+  --chart-5: #95D5B2;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #1D3557;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #52B788;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #52B788;
 }
 
 .dark {
@@ -121,10 +131,68 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    font-size: 15.5px;
+    @apply font-sans antialiased;
+  }
   body {
     @apply bg-background text-foreground;
+    line-height: 1.55;
+    background-color: var(--brand-surface);
   }
-  html {
-    @apply font-sans;
+  h1, h2, h3, h4 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
+  h5, h6 {
+    font-weight: 600;
+  }
+}
+
+/* FullCalendar responsive header — stack vertically on mobile */
+@media (max-width: 640px) {
+  .fc .fc-toolbar.fc-header-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1rem !important;
+    text-align: center;
+    text-transform: capitalize;
+  }
+  .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .fc .fc-button {
+    padding: 0.3rem 0.55rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.1 !important;
+  }
+  .fc .fc-button-primary {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+  }
+  .fc .fc-col-header-cell-cushion,
+  .fc .fc-daygrid-day-number {
+    font-size: 0.78rem;
+  }
+}
+
+/* Brand tint for FullCalendar buttons across viewports */
+.fc .fc-button-primary {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+.fc .fc-button-primary:not(:disabled):hover {
+  background-color: var(--brand-secondary);
+  border-color: var(--brand-secondary);
+}
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background-color: var(--brand-secondary);
+  border-color: var(--brand-secondary);
 }

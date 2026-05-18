@@ -1,8 +1,10 @@
 'use client'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   CalendarIcon,
+  CameraIcon,
   CarIcon,
   ClipboardListIcon,
   LogOutIcon,
@@ -31,11 +33,41 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   async function handleSignOut() {
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/profile/avatar', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      router.refresh()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao enviar foto')
+    } finally {
+      setUploading(false)
+    }
   }
 
   const userLinks: NavItem[] = [
@@ -66,15 +98,20 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
   const roleLabel = user.papel === 'gestor' ? 'Administrador' : 'Usuário'
 
   return (
-    <aside className="h-full w-64 flex flex-col bg-white border-r border-gray-200">
+    <aside
+      className="h-full w-64 flex flex-col text-white"
+      style={{
+        background: 'linear-gradient(180deg, #1D3557 0%, #1D3557 45%, #2D6A4F 100%)',
+      }}
+    >
       {/* Logo / app name */}
-      <div className="px-5 py-5 border-b border-gray-100">
+      <div className="px-5 py-5 border-b border-white/10">
         <Link
           href="/"
           onClick={onNavigate}
           className="flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center overflow-hidden">
+          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-sm">
             <Image
               src="/ammoc-logo.png"
               alt="AMMOC"
@@ -84,17 +121,17 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
             />
           </div>
           <div>
-            <div className="font-bold text-sm text-gray-900 leading-tight group-hover:text-blue-700 transition-colors">
+            <div className="font-bold text-sm leading-tight group-hover:text-white/90 transition-colors">
               AMMOC Frotas
             </div>
-            <div className="text-xs text-gray-500 mt-0.5">Gestão de Veículos</div>
+            <div className="text-xs text-white/60 mt-0.5">Gestão de Veículos</div>
           </div>
         </Link>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="px-3 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <div className="px-3 pb-2 text-xs font-semibold text-white/50 uppercase tracking-wider">
           Geral
         </div>
         <ul className="flex flex-col gap-0.5">
@@ -108,14 +145,11 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
                   onClick={onNavigate}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     active
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-white/15 text-white font-medium'
+                      : 'text-white/75 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <Icon
-                    className={`w-4 h-4 ${active ? 'text-blue-600' : 'text-gray-400'}`}
-                    aria-hidden
-                  />
+                  <Icon className="w-4 h-4" aria-hidden />
                   <span>{l.label}</span>
                 </Link>
               </li>
@@ -125,7 +159,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
 
         {user.papel === 'gestor' && (
           <>
-            <div className="mt-6 px-3 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            <div className="mt-6 px-3 pb-2 text-xs font-semibold text-white/50 uppercase tracking-wider">
               Administração
             </div>
             <ul className="flex flex-col gap-0.5">
@@ -139,14 +173,11 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
                       onClick={onNavigate}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                         active
-                          ? 'bg-blue-50 text-blue-700 font-medium'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-white/15 text-white font-medium'
+                          : 'text-white/75 hover:bg-white/10 hover:text-white'
                       }`}
                     >
-                      <Icon
-                        className={`w-4 h-4 ${active ? 'text-blue-600' : 'text-gray-400'}`}
-                        aria-hidden
-                      />
+                      <Icon className="w-4 h-4" aria-hidden />
                       <span>{l.label}</span>
                     </Link>
                   </li>
@@ -158,21 +189,51 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
       </nav>
 
       {/* User footer */}
-      <div className="border-t border-gray-100 p-3">
+      <div className="border-t border-white/10 p-3">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
-          <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
-            {initials}
-          </div>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            aria-label="Alterar foto de perfil"
+            className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center group flex-shrink-0 ring-2 ring-white/20 hover:ring-white/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#52B788' }}
+          >
+            {user.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatar_url}
+                alt={user.nome}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-sm font-semibold text-white">{initials}</span>
+            )}
+            <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+              {uploading ? (
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <CameraIcon className="w-4 h-4 text-white" aria-hidden />
+              )}
+            </span>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="hidden"
+            onChange={handleAvatarChange}
+          />
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-gray-900 truncate">{user.nome}</div>
-            <div className="text-xs text-gray-500 truncate">{roleLabel}</div>
+            <div className="text-sm font-medium text-white truncate">{user.nome}</div>
+            <div className="text-xs text-white/60 truncate">{roleLabel}</div>
           </div>
         </div>
         <button
           onClick={handleSignOut}
-          className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+          className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/75 hover:bg-white/10 hover:text-white transition-colors"
         >
-          <LogOutIcon className="w-4 h-4 text-gray-400" aria-hidden />
+          <LogOutIcon className="w-4 h-4" aria-hidden />
           <span>Sair</span>
         </button>
       </div>

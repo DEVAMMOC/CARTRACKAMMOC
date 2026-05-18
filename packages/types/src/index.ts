@@ -10,6 +10,7 @@ export interface Usuario {
   papel: Papel
   cargo: string | null
   telefone: string | null
+  avatar_url: string | null
   ativo: boolean
   criado_em: string
 }
