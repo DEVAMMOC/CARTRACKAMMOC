@@ -1,36 +1,47 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { ReservaComDetalhes } from '@cartracking/types'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { ReservaComDetalhes, Usuario } from '@cartracking/types'
 import { ReservaCard } from '@/components/reservas/ReservaCard'
 import Link from 'next/link'
 import { buttonVariants } from '@/components/ui/button'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-
 export default async function ReservasPage() {
   const supabase = await createClient()
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  if (!authUser) {
+    redirect('/login')
+  }
+
+  const admin = createAdminClient()
+  const { data: usuario } = await admin
+    .from('usuarios')
+    .select('*')
+    .eq('id', authUser.id)
+    .single()
 
   let reservas: ReservaComDetalhes[] = []
   let fetchError: string | null = null
 
-  try {
-    const res = await fetch(`${API_URL}/reservas`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    })
+  if (!usuario || !(usuario as Usuario).ativo) {
+    fetchError = 'Usuário inativo ou não encontrado'
+  } else {
+    let query = admin
+      .from('reservas')
+      .select('*, veiculo:veiculos(*), usuario:usuarios(*)')
+      .order('data_saida', { ascending: false })
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }))
-      throw new Error(err.error || `HTTP ${res.status}`)
+    if ((usuario as Usuario).papel === 'funcionario') {
+      query = query.eq('usuario_id', (usuario as Usuario).id)
     }
 
-    reservas = await res.json() as ReservaComDetalhes[]
-  } catch (e: unknown) {
-    fetchError = e instanceof Error ? e.message : 'Erro ao carregar reservas'
+    const { data, error } = await query
+    if (error) {
+      fetchError = error.message
+    } else {
+      reservas = (data ?? []) as ReservaComDetalhes[]
+    }
   }
 
   return (

@@ -1,46 +1,33 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ReservaComDetalhes, Usuario } from '@cartracking/types'
 import { AdminReservasClient } from '@/components/admin/AdminReservasClient'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 export default async function AdminReservasPage() {
   const supabase = await createClient()
 
   const { data: { user: authUser } } = await supabase.auth.getUser()
-  if (!authUser) {
-    redirect('/login')
-  }
+  if (!authUser) redirect('/login')
 
-  const { data: usuario } = await supabase
+  const admin = createAdminClient()
+  const { data: usuario } = await admin
     .from('usuarios')
     .select('*')
     .eq('id', authUser.id)
     .single()
 
-  if (!usuario || usuario.papel !== 'gestor') {
+  if (!usuario || (usuario as Usuario).papel !== 'gestor') {
     redirect('/')
   }
 
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token
-
   let reservas: ReservaComDetalhes[] = []
-  try {
-    const res = await fetch(`${API_URL}/reservas`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    })
-    if (res.ok) {
-      reservas = await res.json()
-    }
-  } catch {
-    reservas = []
-  }
+  const { data } = await admin
+    .from('reservas')
+    .select('*, veiculo:veiculos(*), usuario:usuarios(*)')
+    .order('data_saida', { ascending: false })
+
+  if (data) reservas = data as ReservaComDetalhes[]
 
   return <AdminReservasClient reservas={reservas} usuario={usuario as Usuario} />
 }
