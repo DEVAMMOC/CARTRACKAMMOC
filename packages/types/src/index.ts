@@ -8,6 +8,8 @@ export interface Usuario {
   email: string
   nome: string
   papel: Papel
+  cargo: string | null
+  telefone: string | null
   ativo: boolean
   criado_em: string
 }
