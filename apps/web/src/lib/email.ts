@@ -125,3 +125,87 @@ export async function sendConfirmacaoEmail(reserva: ReservaComDetalhes): Promise
 
   if (error) throw new Error(`Resend error: ${error.message}`)
 }
+
+function alertaHtml(reserva: ReservaComDetalhes, webUrl: string): string {
+  const { veiculo, usuario } = reserva
+  const finalizarUrl = `${webUrl}/reservas/${reserva.id}/finalizar`
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;">
+  <div style="background: #1D3557; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 20px;">Viagem não finalizada</h1>
+  </div>
+  <div style="background: #F8F9FA; padding: 24px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="color: #1D3557; margin: 0 0 12px 0;">Olá, <strong>${usuario.nome}</strong>.</p>
+    <p style="color: #374151; margin: 0 0 16px 0;">
+      A reserva abaixo passou da data prevista de retorno e ainda não foi finalizada no sistema. Conclua a viagem informando o KM final.
+    </p>
+    <table style="width: 100%; border-collapse: collapse; margin: 16px 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 10px 12px; color: #6b7280; font-size: 14px; width: 40%;">Veículo</td>
+        <td style="padding: 10px 12px; color: #1D3557; font-weight: 600;">${veiculo.modelo} (${veiculo.placa})</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 10px 12px; color: #6b7280; font-size: 14px;">Destino</td>
+        <td style="padding: 10px 12px; color: #1D3557;">${reserva.destino}</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 10px 12px; color: #6b7280; font-size: 14px;">Saída</td>
+        <td style="padding: 10px 12px; color: #1D3557;">${formatDate(reserva.data_saida)}</td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 12px; color: #6b7280; font-size: 14px;">Retorno previsto</td>
+        <td style="padding: 10px 12px; color: #b91c1c; font-weight: 600;">${formatDate(reserva.data_retorno_prevista)}</td>
+      </tr>
+    </table>
+    <div style="text-align: center; margin: 28px 0 12px;">
+      <a href="${finalizarUrl}"
+         style="background: #2D6A4F; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+        Finalizar corrida agora →
+      </a>
+    </div>
+    <p style="color: #6b7280; font-size: 13px; margin: 12px 0 0; text-align: center;">
+      Ou copie o link: <a href="${finalizarUrl}" style="color: #2D6A4F;">${finalizarUrl}</a>
+    </p>
+    <p style="color: #9ca3af; font-size: 12px; margin-top: 24px; text-align: center;">
+      AMMOC — Sistema de Gestão de Frotas
+    </p>
+  </div>
+</body>
+</html>`
+}
+
+export async function sendAlertaNaoFinalizadaEmail(
+  reserva: ReservaComDetalhes,
+  gestores: { email: string }[]
+): Promise<void> {
+  const resend = getResend()
+  if (!resend) {
+    console.warn('[email] RESEND_API_KEY not set — skipping alert email')
+    return
+  }
+
+  const { usuario } = reserva
+  const subject = `Viagem não finalizada — ${reserva.veiculo.modelo} ${reserva.veiculo.placa} — ${usuario.nome}`
+  const webUrl = getWebUrl()
+  const html = alertaHtml(reserva, webUrl)
+
+  const destinatarios = Array.from(
+    new Set([usuario.email, ...gestores.map((g) => g.email)].filter(Boolean))
+  )
+
+  for (const email of destinatarios) {
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject,
+      html,
+    })
+    await logNotificacao(reserva.id, 'alerta_nao_finalizada', email, !error, error?.message)
+    if (error) {
+      console.error(`[email] alerta para ${email} falhou:`, error.message)
+    }
+  }
+}
