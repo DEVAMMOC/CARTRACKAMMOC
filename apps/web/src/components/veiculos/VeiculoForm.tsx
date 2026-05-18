@@ -22,6 +22,16 @@ const TIPO_OPTIONS: { value: TipoVeiculo; label: string }[] = [
   { value: 'outro', label: 'Outro' },
 ]
 
+// Formato antigo: AAA0000  |  Mercosul: AAA0A00
+const PLACA_REGEX = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/
+
+const MIN_YEAR = 2000
+const MAX_YEAR = 2030
+
+function normalizePlaca(raw: string): string {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '')
+}
+
 interface VeiculoFormProps {
   veiculo?: Veiculo
   onSuccess: () => void
@@ -41,16 +51,16 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
 
   function validate(): boolean {
     const newErrors: Partial<Record<string, string>> = {}
 
-    if (!placa.trim()) {
+    const placaNorm = normalizePlaca(placa)
+    if (!placaNorm) {
       newErrors.placa = 'Placa é obrigatória'
-    } else if (placa.trim().length > 8) {
-      newErrors.placa = 'Placa deve ter no máximo 8 caracteres'
+    } else if (!PLACA_REGEX.test(placaNorm)) {
+      newErrors.placa = 'Formato inválido. Use AAA0000 ou AAA0A00.'
     }
 
     if (!modelo.trim()) {
@@ -62,8 +72,8 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
     const anoNum = parseInt(ano, 10)
     if (!ano || isNaN(anoNum)) {
       newErrors.ano = 'Ano é obrigatório'
-    } else if (anoNum < 1900 || anoNum > 2030) {
-      newErrors.ano = 'Ano deve estar entre 1900 e 2030'
+    } else if (anoNum < MIN_YEAR || anoNum > MAX_YEAR) {
+      newErrors.ano = `Ano deve estar entre ${MIN_YEAR} e ${MAX_YEAR}`
     }
 
     if (!isEdit) {
@@ -87,10 +97,11 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
     setError(null)
 
     try {
+      const placaNorm = normalizePlaca(placa)
       if (isEdit) {
         type UpdatePayload = Partial<CriarVeiculoInput> & { ativo?: boolean }
         const payload: UpdatePayload = {
-          placa: placa.trim().toUpperCase(),
+          placa: placaNorm,
           modelo: modelo.trim(),
           ano: parseInt(ano, 10),
           tipo,
@@ -105,7 +116,7 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
         })
       } else {
         const payload: CriarVeiculoInput = {
-          placa: placa.trim().toUpperCase(),
+          placa: placaNorm,
           modelo: modelo.trim(),
           ano: parseInt(ano, 10),
           tipo,
@@ -130,57 +141,57 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Placa */}
-      <div>
-        <Label htmlFor="placa">Placa *</Label>
-        <Input
-          id="placa"
-          value={placa}
-          onChange={e => setPlaca(e.target.value.toUpperCase())}
-          maxLength={8}
-          placeholder="ABC-1234"
-          className="mt-1"
-        />
-        {errors.placa && (
-          <p className="text-red-500 text-xs mt-1">{errors.placa}</p>
-        )}
+      {/* Placa + Ano (lado a lado em telas maiores) */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="placa">Placa *</Label>
+          <Input
+            id="placa"
+            value={placa}
+            onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+            maxLength={8}
+            placeholder="AAA0000 ou AAA0A00"
+            className="mt-1 font-mono tracking-wider"
+            inputMode="text"
+            autoCapitalize="characters"
+          />
+          {errors.placa && (
+            <p className="text-destructive text-xs mt-1">{errors.placa}</p>
+          )}
+        </div>
+        <div>
+          <Label htmlFor="ano">Ano *</Label>
+          <Input
+            id="ano"
+            type="number"
+            value={ano}
+            onChange={(e) => setAno(e.target.value)}
+            min={MIN_YEAR}
+            max={MAX_YEAR}
+            placeholder="2024"
+            className="mt-1"
+          />
+          {errors.ano && (
+            <p className="text-destructive text-xs mt-1">{errors.ano}</p>
+          )}
+        </div>
       </div>
 
-      {/* Modelo */}
       <div>
         <Label htmlFor="modelo">Modelo *</Label>
         <Input
           id="modelo"
           value={modelo}
-          onChange={e => setModelo(e.target.value)}
+          onChange={(e) => setModelo(e.target.value)}
           maxLength={100}
           placeholder="Ex: Toyota Hilux"
           className="mt-1"
         />
         {errors.modelo && (
-          <p className="text-red-500 text-xs mt-1">{errors.modelo}</p>
+          <p className="text-destructive text-xs mt-1">{errors.modelo}</p>
         )}
       </div>
 
-      {/* Ano */}
-      <div>
-        <Label htmlFor="ano">Ano *</Label>
-        <Input
-          id="ano"
-          type="number"
-          value={ano}
-          onChange={e => setAno(e.target.value)}
-          min={1900}
-          max={2030}
-          placeholder="2024"
-          className="mt-1"
-        />
-        {errors.ano && (
-          <p className="text-red-500 text-xs mt-1">{errors.ano}</p>
-        )}
-      </div>
-
-      {/* Tipo */}
       <div>
         <Label htmlFor="tipo">Tipo *</Label>
         <div className="mt-1">
@@ -189,7 +200,7 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
             <SelectContent>
-              {TIPO_OPTIONS.map(opt => (
+              {TIPO_OPTIONS.map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
@@ -199,7 +210,6 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
         </div>
       </div>
 
-      {/* KM Atual — only in create mode */}
       {!isEdit && (
         <div>
           <Label htmlFor="km_atual">KM Atual *</Label>
@@ -207,18 +217,17 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
             id="km_atual"
             type="number"
             value={kmAtual}
-            onChange={e => setKmAtual(e.target.value)}
+            onChange={(e) => setKmAtual(e.target.value)}
             min={0}
             placeholder="0"
             className="mt-1"
           />
           {errors.km_atual && (
-            <p className="text-red-500 text-xs mt-1">{errors.km_atual}</p>
+            <p className="text-destructive text-xs mt-1">{errors.km_atual}</p>
           )}
         </div>
       )}
 
-      {/* KM Atual read-only in edit mode */}
       {isEdit && (
         <div>
           <Label>KM Atual</Label>
@@ -228,15 +237,14 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
         </div>
       )}
 
-      {/* Ativo — only in edit mode */}
       {isEdit && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 bg-gray-50/60">
           <input
             id="ativo"
             type="checkbox"
             checked={ativo}
-            onChange={e => setAtivo(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            onChange={(e) => setAtivo(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 accent-primary cursor-pointer"
           />
           <Label htmlFor="ativo" className="cursor-pointer">
             Veículo ativo
@@ -244,13 +252,12 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
         </div>
       )}
 
-      {/* Foto URL */}
       <div>
         <Label htmlFor="foto_url">Foto URL (opcional)</Label>
         <Input
           id="foto_url"
           value={fotoUrl}
-          onChange={e => setFotoUrl(e.target.value)}
+          onChange={(e) => setFotoUrl(e.target.value)}
           placeholder="https://..."
           className="mt-1"
         />
@@ -265,8 +272,12 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
       <div className="flex gap-3 pt-2">
         <Button type="submit" disabled={submitting} className="flex-1">
           {submitting
-            ? isEdit ? 'Salvando...' : 'Criando...'
-            : isEdit ? 'Salvar Alterações' : 'Criar Veículo'}
+            ? isEdit
+              ? 'Salvando...'
+              : 'Criando...'
+            : isEdit
+            ? 'Salvar Alterações'
+            : 'Criar Veículo'}
         </Button>
         <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
           Cancelar
