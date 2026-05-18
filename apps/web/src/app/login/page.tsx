@@ -1,11 +1,21 @@
 'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import Image from 'next/image'
 
 export default function LoginPage() {
   const supabase = createClient()
+  const router = useRouter()
+
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
+  const [loading, setLoading] = useState(false)
 
   async function signInWithGoogle() {
     await supabase.auth.signInWithOAuth({
@@ -18,6 +28,48 @@ export default function LoginPage() {
     await supabase.auth.signInWithOAuth({
       provider: 'azure',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
+    })
+  }
+
+  async function signInWithEmail(e: React.FormEvent) {
+    e.preventDefault()
+    setMessage(null)
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (error) {
+      setMessage({ type: 'error', text: error.message })
+      return
+    }
+    router.push('/reservas')
+    router.refresh()
+  }
+
+  async function signUpWithEmail() {
+    setMessage(null)
+    if (!email || !password) {
+      setMessage({ type: 'error', text: 'Informe email e senha.' })
+      return
+    }
+    setLoading(true)
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    })
+    setLoading(false)
+    if (error) {
+      setMessage({ type: 'error', text: error.message })
+      return
+    }
+    if (data.session) {
+      router.push('/reservas')
+      router.refresh()
+      return
+    }
+    setMessage({
+      type: 'success',
+      text: 'Conta criada. Verifique seu email para confirmar o cadastro.',
     })
   }
 
@@ -65,6 +117,72 @@ export default function LoginPage() {
             </svg>
             Entrar com Microsoft
           </Button>
+
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">ou</span>
+            </div>
+          </div>
+
+          <form onSubmit={signInWithEmail} className="flex flex-col gap-3">
+            <div className="grid gap-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                className="h-10"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                className="h-10"
+              />
+            </div>
+
+            {message && (
+              <p
+                className={
+                  message.type === 'error'
+                    ? 'text-sm text-destructive'
+                    : 'text-sm text-green-600'
+                }
+                role={message.type === 'error' ? 'alert' : undefined}
+              >
+                {message.text}
+              </p>
+            )}
+
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1 h-11" disabled={loading}>
+                {loading ? 'Entrando...' : 'Entrar'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-11"
+                onClick={signUpWithEmail}
+                disabled={loading}
+              >
+                Criar conta
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
