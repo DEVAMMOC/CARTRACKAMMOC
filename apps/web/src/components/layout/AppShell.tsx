@@ -28,7 +28,7 @@ export function AppShell({ user, children }: AppShellProps) {
   }, [mobileOpen])
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-background text-foreground">
       {/* Desktop sidebar */}
       <div className="hidden lg:block flex-shrink-0">
         <Sidebar user={user} />
@@ -50,12 +50,12 @@ export function AppShell({ user, children }: AppShellProps) {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <header className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+        <header className="lg:hidden sticky top-0 z-30 bg-card border-b border-border px-4 py-3 flex items-center gap-3">
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
-            className="p-2 -ml-2 rounded-md text-gray-700 hover:bg-gray-100"
+            className="p-2 -ml-2 rounded-md text-foreground hover:bg-muted"
           >
             {mobileOpen ? (
               <XIcon className="w-5 h-5" />
@@ -63,7 +63,7 @@ export function AppShell({ user, children }: AppShellProps) {
               <MenuIcon className="w-5 h-5" />
             )}
           </button>
-          <span className="font-semibold text-gray-900">AMMOC Frotas</span>
+          <span className="font-semibold text-foreground">AMMOC Frotas</span>
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">{children}</main>

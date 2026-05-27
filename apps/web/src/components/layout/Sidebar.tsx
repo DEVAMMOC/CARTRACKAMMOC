@@ -16,6 +16,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { Usuario } from '@cartracking/types'
 import Image from 'next/image'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 interface SidebarProps {
   user: Usuario
@@ -98,14 +99,9 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
   const roleLabel = user.papel === 'gestor' ? 'Administrador' : 'Usuário'
 
   return (
-    <aside
-      className="h-full w-64 flex flex-col text-white"
-      style={{
-        background: 'linear-gradient(180deg, #1D3557 0%, #1D3557 45%, #2D6A4F 100%)',
-      }}
-    >
+    <aside className="h-full w-64 flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       {/* Logo / app name */}
-      <div className="px-5 py-5 border-b border-white/10">
+      <div className="px-5 py-5 border-b border-sidebar-border">
         <Link
           href="/"
           onClick={onNavigate}
@@ -113,7 +109,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
         >
           <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-sm">
             <Image
-              src="/ammoc-logo.png"
+              src="/ammoc-transparent.png"
               alt="AMMOC"
               width={36}
               height={36}
@@ -121,17 +117,17 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
             />
           </div>
           <div>
-            <div className="font-bold text-sm leading-tight group-hover:text-white/90 transition-colors">
+            <div className="font-bold text-sm leading-tight tracking-tight group-hover:opacity-90 transition-opacity">
               AMMOC Frotas
             </div>
-            <div className="text-xs text-white/60 mt-0.5">Gestão de Veículos</div>
+            <div className="text-xs text-sidebar-foreground/60 mt-0.5">Gestão de Veículos</div>
           </div>
         </Link>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="px-3 pb-2 text-xs font-semibold text-white/50 uppercase tracking-wider">
+        <div className="px-3 pb-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
           Geral
         </div>
         <ul className="flex flex-col gap-0.5">
@@ -145,8 +141,8 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
                   onClick={onNavigate}
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     active
-                      ? 'bg-white/15 text-white font-medium'
-                      : 'text-white/75 hover:bg-white/10 hover:text-white'
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                      : 'text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }`}
                 >
                   <Icon className="w-4 h-4" aria-hidden />
@@ -159,7 +155,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
 
         {user.papel === 'gestor' && (
           <>
-            <div className="mt-6 px-3 pb-2 text-xs font-semibold text-white/50 uppercase tracking-wider">
+            <div className="mt-6 px-3 pb-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
               Administração
             </div>
             <ul className="flex flex-col gap-0.5">
@@ -173,8 +169,8 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
                       onClick={onNavigate}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                         active
-                          ? 'bg-white/15 text-white font-medium'
-                          : 'text-white/75 hover:bg-white/10 hover:text-white'
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                          : 'text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                       }`}
                     >
                       <Icon className="w-4 h-4" aria-hidden />
@@ -189,15 +185,14 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
       </nav>
 
       {/* User footer */}
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             aria-label="Alterar foto de perfil"
-            className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center group flex-shrink-0 ring-2 ring-white/20 hover:ring-white/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#52B788' }}
+            className="relative w-10 h-10 rounded-full overflow-hidden flex items-center justify-center group flex-shrink-0 ring-2 ring-sidebar-border hover:ring-sidebar-foreground/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed bg-sidebar-primary text-sidebar-primary-foreground"
           >
             {user.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -207,7 +202,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-sm font-semibold text-white">{initials}</span>
+              <span className="text-sm font-semibold">{initials}</span>
             )}
             <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
               {uploading ? (
@@ -225,17 +220,20 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
             onChange={handleAvatarChange}
           />
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-white truncate">{user.nome}</div>
-            <div className="text-xs text-white/60 truncate">{roleLabel}</div>
+            <div className="text-sm font-medium text-sidebar-foreground truncate">{user.nome}</div>
+            <div className="text-xs text-sidebar-foreground/60 truncate">{roleLabel}</div>
           </div>
         </div>
-        <button
-          onClick={handleSignOut}
-          className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/75 hover:bg-white/10 hover:text-white transition-colors"
-        >
-          <LogOutIcon className="w-4 h-4" aria-hidden />
-          <span>Sair</span>
-        </button>
+        <div className="mt-2 flex items-center gap-2">
+          <ThemeToggle className="flex-shrink-0" />
+          <button
+            onClick={handleSignOut}
+            className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+          >
+            <LogOutIcon className="w-4 h-4" aria-hidden />
+            <span>Sair</span>
+          </button>
+        </div>
       </div>
     </aside>
   )
