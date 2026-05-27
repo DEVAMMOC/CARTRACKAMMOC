@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 import type { ReservaComDetalhes } from '@cartracking/types'
 import { createAdminClient } from './supabase/admin'
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'AMMOC Frotas <frotas@ammoc.org.br>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'AMMOC Frotas <avisos@ammoc.org.br>'
 
 function getWebUrl(): string {
   return (
