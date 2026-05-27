@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  BellIcon,
   CalendarIcon,
   CameraIcon,
   CarIcon,
@@ -82,6 +83,7 @@ export function Sidebar({ user, onNavigate }: SidebarProps) {
     { href: '/admin/veiculos', label: 'Veículos', exact: false, Icon: TruckIcon },
     { href: '/admin/reservas', label: 'Todas as Reservas', exact: false, Icon: ClipboardListIcon },
     { href: '/admin/relatorios', label: 'Relatórios', exact: false, Icon: BarChart3Icon },
+    { href: '/admin/notificacoes', label: 'Notificações Email', exact: false, Icon: BellIcon },
   ]
 
   function isActive(href: string, exact: boolean) {

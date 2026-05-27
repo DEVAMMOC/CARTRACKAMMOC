@@ -114,16 +114,40 @@ export async function sendConfirmacaoEmail(reserva: ReservaComDetalhes): Promise
   const { usuario } = reserva
   const subject = `Reserva confirmada — ${reserva.veiculo.modelo} ${reserva.veiculo.placa} - ${formatDate(reserva.data_saida)}`
 
-  const { error } = await resend.emails.send({
-    from: FROM_EMAIL,
-    to: usuario.email,
-    subject,
-    html: confirmacaoHtml(reserva, getWebUrl()),
-  })
+  let result
+  try {
+    result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: usuario.email,
+      subject,
+      html: confirmacaoHtml(reserva, getWebUrl()),
+    })
+  } catch (thrown) {
+    // resend.emails.send pode lançar (network, SDK), além de retornar { error }
+    const msg = thrown instanceof Error ? `${thrown.name}: ${thrown.message}` : String(thrown)
+    console.error('[email] Resend SDK threw:', msg, { from: FROM_EMAIL, to: usuario.email })
+    await logNotificacao(reserva.id, 'confirmacao', usuario.email, false, `SDK threw: ${msg}`)
+    throw thrown
+  }
 
-  await logNotificacao(reserva.id, 'confirmacao', usuario.email, !error, error?.message)
+  const error = result.error
+  const data = result.data
 
-  if (error) throw new Error(`Resend error: ${error.message}`)
+  if (error) {
+    // Log detalhado: nome + mensagem + status code (quando o Resend devolve)
+    const detalhe = JSON.stringify({
+      name: error.name,
+      message: error.message,
+      from: FROM_EMAIL,
+      to: usuario.email,
+    })
+    console.error('[email] Resend rejected confirmation:', detalhe)
+    await logNotificacao(reserva.id, 'confirmacao', usuario.email, false, detalhe)
+    throw new Error(`Resend error: ${error.name} — ${error.message}`)
+  }
+
+  console.log(`[email] confirmation sent to ${usuario.email}, id=${data?.id ?? 'unknown'}`)
+  await logNotificacao(reserva.id, 'confirmacao', usuario.email, true)
 }
 
 function alertaHtml(reserva: ReservaComDetalhes, webUrl: string): string {
