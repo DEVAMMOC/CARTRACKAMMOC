@@ -109,8 +109,7 @@ export function ProfileForm({ usuario }: ProfileFormProps) {
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
           aria-label="Alterar foto de perfil"
-          className="relative w-20 h-20 rounded-full overflow-hidden flex items-center justify-center group flex-shrink-0 ring-2 ring-gray-200 hover:ring-primary/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-          style={{ backgroundColor: '#52B788' }}
+          className="relative w-20 h-20 rounded-full overflow-hidden flex items-center justify-center group flex-shrink-0 ring-2 ring-border hover:ring-primary/40 transition-all disabled:opacity-60 disabled:cursor-not-allowed bg-primary text-primary-foreground"
         >
           {avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -120,7 +119,7 @@ export function ProfileForm({ usuario }: ProfileFormProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <span className="text-2xl font-semibold text-white">{initials}</span>
+            <span className="text-2xl font-semibold">{initials}</span>
           )}
           <span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             {uploading ? (
@@ -162,9 +161,9 @@ export function ProfileForm({ usuario }: ProfileFormProps) {
             id="email"
             value={usuario.email}
             disabled
-            className="h-10 bg-gray-50"
+            className="h-10 bg-muted/50"
           />
-          <p className="text-xs text-gray-500">Email não pode ser alterado.</p>
+          <p className="text-xs text-muted-foreground">Email não pode ser alterado.</p>
         </div>
 
         <div className="grid gap-1.5">
@@ -209,7 +208,7 @@ export function ProfileForm({ usuario }: ProfileFormProps) {
           className={
             message.type === 'error'
               ? 'text-sm text-destructive'
-              : 'text-sm text-green-700'
+              : 'text-sm text-primary'
           }
           role={message.type === 'error' ? 'alert' : undefined}
         >

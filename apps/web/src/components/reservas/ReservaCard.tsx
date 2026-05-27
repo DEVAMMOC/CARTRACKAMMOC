@@ -15,10 +15,10 @@ const STATUS_LABELS: Record<StatusReserva, string> = {
 }
 
 const STATUS_CLASSES: Record<StatusReserva, string> = {
-  confirmada: 'bg-blue-100 text-blue-800 border-blue-200',
-  em_andamento: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  finalizada: 'bg-green-100 text-green-800 border-green-200',
-  cancelada: 'bg-gray-100 text-gray-600 border-gray-200',
+  confirmada: 'badge-info',
+  em_andamento: 'badge-warning',
+  finalizada: 'badge-success',
+  cancelada: 'badge-muted',
 }
 
 const TIPO_LABELS: Record<string, string> = {
@@ -77,11 +77,7 @@ export function ReservaCard({ reserva }: ReservaCardProps) {
               {reserva.veiculo.placa}
             </span>
           </CardTitle>
-          <span
-            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusClass}`}
-          >
-            {STATUS_LABELS[reserva.status]}
-          </span>
+          <span className={statusClass}>{STATUS_LABELS[reserva.status]}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
           {TIPO_LABELS[reserva.veiculo.tipo] ?? reserva.veiculo.tipo}
@@ -89,7 +85,7 @@ export function ReservaCard({ reserva }: ReservaCardProps) {
       </CardHeader>
 
       <CardContent className="pt-3 space-y-2 text-sm">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
           <div>
             <span className="font-medium text-muted-foreground">Saída:</span>{' '}
             {formatDate(reserva.data_saida)}
@@ -118,7 +114,7 @@ export function ReservaCard({ reserva }: ReservaCardProps) {
         )}
 
         {reserva.status === 'finalizada' && (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
             {reserva.km_saida !== null && (
               <div>
                 <span className="font-medium text-muted-foreground">KM de saída:</span>{' '}

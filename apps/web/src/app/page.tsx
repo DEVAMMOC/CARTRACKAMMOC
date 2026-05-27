@@ -13,14 +13,14 @@ export default async function HomePage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Calendário de Reservas</h1>
           <p className="text-sm text-muted-foreground mt-1">Visualize todos os agendamentos da frota</p>
         </div>
         <Link
           href="/reservas/nova"
-          className="bg-primary text-primary-foreground hover:opacity-90 px-4 py-2 rounded-lg transition-opacity font-medium text-sm"
+          className="bg-primary text-primary-foreground hover:opacity-90 px-4 py-2 rounded-lg transition-opacity font-medium text-sm self-start sm:self-auto"
         >
           + Nova Reserva
         </Link>

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { apiFetch } from '@/lib/api'
@@ -10,6 +10,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
 
 const schema = z.object({
@@ -45,8 +52,9 @@ export function NovaReservaForm() {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { veiculo_id: '' } })
 
   const veiculoId = watch('veiculo_id')
   const dataSaida = watch('data_saida')
@@ -110,26 +118,42 @@ export function NovaReservaForm() {
       {/* Vehicle selector */}
       <div>
         <Label className="text-sm font-medium">Veículo *</Label>
-        <select
-          {...register('veiculo_id')}
-          className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Selecione um veículo...</option>
-          {veiculos.map(v => (
-            <option key={v.id} value={v.id}>
-              {v.modelo} ({v.placa}) — {TIPO_LABELS[v.tipo] ?? v.tipo}
-            </option>
-          ))}
-        </select>
+        <Controller
+          name="veiculo_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value || undefined}
+              onValueChange={(value) => field.onChange(value ?? '')}
+            >
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Selecione um veículo..." />
+              </SelectTrigger>
+              <SelectContent>
+                {veiculos.length === 0 ? (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    Nenhum veículo disponível
+                  </div>
+                ) : (
+                  veiculos.map(v => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.modelo} ({v.placa}) — {TIPO_LABELS[v.tipo] ?? v.tipo}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          )}
+        />
         {errors.veiculo_id && (
-          <p className="text-red-500 text-xs mt-1">{errors.veiculo_id.message}</p>
+          <p className="text-destructive text-xs mt-1">{errors.veiculo_id.message}</p>
         )}
 
         {selectedVeiculo && (
-          <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+          <div className="mt-2 p-3 rounded-lg border border-border bg-accent/30 flex items-center justify-between flex-wrap gap-2">
             <div>
-              <span className="text-sm font-medium text-blue-900">{selectedVeiculo.modelo}</span>
-              <span className="text-xs text-blue-600 ml-2">Placa: {selectedVeiculo.placa}</span>
+              <span className="text-sm font-medium text-foreground">{selectedVeiculo.modelo}</span>
+              <span className="text-xs text-muted-foreground ml-2">Placa: {selectedVeiculo.placa}</span>
             </div>
             <div className="flex gap-2">
               <Badge variant="outline" className="text-xs">{TIPO_LABELS[selectedVeiculo.tipo]}</Badge>
@@ -141,8 +165,8 @@ export function NovaReservaForm() {
         )}
       </div>
 
-      {/* Date/time fields */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Date/time fields — stacked on mobile, side-by-side on >=sm */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <Label className="text-sm font-medium">Data/Hora de Saída *</Label>
           <Input
@@ -151,7 +175,7 @@ export function NovaReservaForm() {
             className="mt-1"
           />
           {errors.data_saida && (
-            <p className="text-red-500 text-xs mt-1">{errors.data_saida.message}</p>
+            <p className="text-destructive text-xs mt-1">{errors.data_saida.message}</p>
           )}
         </div>
         <div>
@@ -162,7 +186,7 @@ export function NovaReservaForm() {
             className="mt-1"
           />
           {errors.data_retorno_prevista && (
-            <p className="text-red-500 text-xs mt-1">{errors.data_retorno_prevista.message}</p>
+            <p className="text-destructive text-xs mt-1">{errors.data_retorno_prevista.message}</p>
           )}
         </div>
       </div>
@@ -171,25 +195,21 @@ export function NovaReservaForm() {
       {veiculoId && dataSaida && dataRetorno && (
         <div>
           {checkingDisp && (
-            <Card className="border-blue-200 bg-blue-50">
-              <CardContent className="py-3 text-blue-700 text-sm">
+            <Card className="border-border bg-muted/40">
+              <CardContent className="py-3 text-sm text-muted-foreground">
                 ⏳ Verificando disponibilidade...
               </CardContent>
             </Card>
           )}
           {!checkingDisp && disponivel === true && (
-            <Card className="border-green-200 bg-green-50">
-              <CardContent className="py-3 text-green-700 text-sm font-medium">
-                ✅ Veículo disponível neste período!
-              </CardContent>
-            </Card>
+            <div className="rounded-lg border border-green-200 bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-300 dark:border-green-900 px-4 py-3 text-sm font-medium">
+              ✅ Veículo disponível neste período!
+            </div>
           )}
           {!checkingDisp && disponivel === false && (
-            <Card className="border-red-200 bg-red-50">
-              <CardContent className="py-3 text-red-700 text-sm font-medium">
-                ❌ Veículo não disponível neste período. Escolha outra data ou outro veículo.
-              </CardContent>
-            </Card>
+            <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm font-medium">
+              ❌ Veículo não disponível neste período. Escolha outra data ou outro veículo.
+            </div>
           )}
         </div>
       )}
@@ -203,7 +223,7 @@ export function NovaReservaForm() {
           className="mt-1"
         />
         {errors.destino && (
-          <p className="text-red-500 text-xs mt-1">{errors.destino.message}</p>
+          <p className="text-destructive text-xs mt-1">{errors.destino.message}</p>
         )}
       </div>
 
@@ -216,30 +236,31 @@ export function NovaReservaForm() {
           className="mt-1"
         />
         {errors.servico && (
-          <p className="text-red-500 text-xs mt-1">{errors.servico.message}</p>
+          <p className="text-destructive text-xs mt-1">{errors.servico.message}</p>
         )}
       </div>
 
       {submitError && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="py-3 text-red-700 text-sm">{submitError}</CardContent>
-        </Card>
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
+          {submitError}
+        </div>
       )}
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.back()}
+          className="sm:w-auto"
+        >
+          Cancelar
+        </Button>
         <Button
           type="submit"
           disabled={isSubmitting || disponivel === false}
           className="flex-1"
         >
           {isSubmitting ? 'Criando reserva...' : 'Confirmar Reserva'}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-        >
-          Cancelar
         </Button>
       </div>
     </form>

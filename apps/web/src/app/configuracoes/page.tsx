@@ -22,7 +22,7 @@ export default async function ConfiguracoesPage() {
   if (!usuario || !(usuario as Usuario).ativo) {
     return (
       <div className="max-w-3xl mx-auto">
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
           Usuário inativo ou não encontrado.
         </div>
       </div>

@@ -7,7 +7,6 @@ import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent } from '@/components/ui/card'
 
 interface FinalizarViagemFormProps {
   reserva: ReservaComDetalhes
@@ -51,9 +50,9 @@ export function FinalizarViagemForm({ reserva }: FinalizarViagemFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Vehicle info header */}
-      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-        <p className="font-medium text-blue-900">{reserva.veiculo.modelo}</p>
-        <p className="text-sm text-blue-700">Placa: {reserva.veiculo.placa}</p>
+      <div className="rounded-lg border border-border bg-accent/30 px-4 py-3">
+        <p className="font-medium text-foreground">{reserva.veiculo.modelo}</p>
+        <p className="text-sm text-muted-foreground">Placa: {reserva.veiculo.placa}</p>
       </div>
 
       {/* KM de saída (read-only) */}
@@ -100,15 +99,12 @@ export function FinalizarViagemForm({ reserva }: FinalizarViagemFormProps) {
       </div>
 
       {error && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="py-3 text-red-700 text-sm">{error}</CardContent>
-        </Card>
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
+          {error}
+        </div>
       )}
 
-      <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
-          {isSubmitting ? 'Finalizando...' : 'Finalizar Viagem'}
-        </Button>
+      <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
         <Button
           type="button"
           variant="outline"
@@ -116,6 +112,9 @@ export function FinalizarViagemForm({ reserva }: FinalizarViagemFormProps) {
           disabled={isSubmitting}
         >
           Voltar
+        </Button>
+        <Button type="submit" disabled={isSubmitting} className="flex-1">
+          {isSubmitting ? 'Finalizando...' : 'Finalizar Viagem'}
         </Button>
       </div>
     </form>

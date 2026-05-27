@@ -238,13 +238,13 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
       )}
 
       {isEdit && (
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 bg-gray-50/60">
+        <div className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 bg-muted/40">
           <input
             id="ativo"
             type="checkbox"
             checked={ativo}
             onChange={(e) => setAtivo(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-primary cursor-pointer"
+            className="h-4 w-4 rounded border-input accent-primary cursor-pointer"
           />
           <Label htmlFor="ativo" className="cursor-pointer">
             Veículo ativo
@@ -264,7 +264,7 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-3 py-2 text-sm">
           {error}
         </div>
       )}

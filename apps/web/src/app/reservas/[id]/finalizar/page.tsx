@@ -25,7 +25,7 @@ export default async function FinalizarViagemPage({ params }: PageProps) {
   if (!usuario || !(usuario as Usuario).ativo) {
     return (
       <div className="max-w-xl mx-auto px-4 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
           Usuário inativo ou não encontrado
         </div>
       </div>
@@ -41,7 +41,7 @@ export default async function FinalizarViagemPage({ params }: PageProps) {
   if (error || !reserva) {
     return (
       <div className="max-w-xl mx-auto px-4 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
           {error?.message || 'Reserva não encontrada'}
         </div>
       </div>
@@ -53,7 +53,7 @@ export default async function FinalizarViagemPage({ params }: PageProps) {
   if (r.usuario_id !== u.id && u.papel !== 'gestor') {
     return (
       <div className="max-w-xl mx-auto px-4 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
           Sem permissão para visualizar esta reserva.
         </div>
       </div>
@@ -63,7 +63,7 @@ export default async function FinalizarViagemPage({ params }: PageProps) {
   if (r.status !== 'em_andamento') {
     return (
       <div className="max-w-xl mx-auto px-4 py-8">
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+        <div className="rounded-lg border border-yellow-200 bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-300 dark:border-yellow-900 px-4 py-3 text-sm">
           Reserva não encontrada ou não está em andamento.
         </div>
       </div>
@@ -72,7 +72,7 @@ export default async function FinalizarViagemPage({ params }: PageProps) {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-semibold mb-6">Finalizar Viagem</h1>
+      <h1 className="text-2xl font-bold text-foreground tracking-tight mb-6">Finalizar Viagem</h1>
       <FinalizarViagemForm reserva={r} />
     </div>
   )

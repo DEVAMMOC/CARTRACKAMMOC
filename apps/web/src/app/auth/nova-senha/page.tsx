@@ -49,19 +49,28 @@ export default function NovaSenhaPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
             <Image
-              src="/ammoc-logo.png"
+              src="/ammoc.png"
               alt="AMMOC"
               width={120}
-              height={60}
-              className="object-contain"
+              height={120}
+              className="hidden dark:block object-contain"
+              priority
+            />
+            <Image
+              src="/ammoc-transparent.png"
+              alt="AMMOC"
+              width={120}
+              height={120}
+              className="block dark:hidden object-contain"
+              priority
             />
           </div>
-          <CardTitle className="text-xl font-bold text-gray-800">Definir nova senha</CardTitle>
+          <CardTitle className="text-xl font-bold text-foreground tracking-tight">Definir nova senha</CardTitle>
           <p className="text-muted-foreground text-sm">Escolha uma senha para sua conta</p>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 pt-4">
@@ -114,7 +123,7 @@ export default function NovaSenhaPage() {
                 className={
                   message.type === 'error'
                     ? 'text-sm text-destructive'
-                    : 'text-sm text-green-600'
+                    : 'text-sm text-primary'
                 }
                 role={message.type === 'error' ? 'alert' : undefined}
               >

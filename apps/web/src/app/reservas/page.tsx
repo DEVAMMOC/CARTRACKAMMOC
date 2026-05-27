@@ -46,21 +46,21 @@ export default async function ReservasPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Minhas Reservas</h1>
-        <Link href="/reservas/nova" className={buttonVariants({ variant: 'default' })}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Minhas Reservas</h1>
+        <Link href="/reservas/nova" className={buttonVariants({ variant: 'default' }) + ' self-start sm:self-auto'}>
           Nova Reserva
         </Link>
       </div>
 
       {fetchError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
           {fetchError}
         </div>
       )}
 
       {!fetchError && reservas.length === 0 && (
-        <div className="rounded-xl border border-dashed border-gray-300 px-6 py-12 text-center text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center text-muted-foreground">
           <p className="text-base font-medium">Nenhuma reserva encontrada</p>
           <p className="mt-1 text-sm">Crie uma nova reserva para começar a usar o sistema.</p>
         </div>
