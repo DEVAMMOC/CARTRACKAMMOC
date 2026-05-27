@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { createClient } from '@/lib/supabase/server'
 import { AppShell } from '@/components/layout/AppShell'
+import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import type { Usuario } from '@cartracking/types'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -32,16 +33,20 @@ export default async function RootLayout({
 
   if (!usuario) {
     return (
-      <html lang="pt-BR">
-        <body className={inter.className}>{children}</body>
+      <html lang="pt-BR" suppressHydrationWarning>
+        <body className={inter.className}>
+          <ThemeProvider>{children}</ThemeProvider>
+        </body>
       </html>
     )
   }
 
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
-        <AppShell user={usuario}>{children}</AppShell>
+        <ThemeProvider>
+          <AppShell user={usuario}>{children}</AppShell>
+        </ThemeProvider>
       </body>
     </html>
   )
