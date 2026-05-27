@@ -15,12 +15,12 @@ export default async function HomePage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Calendário de Reservas</h1>
-          <p className="text-sm text-gray-500 mt-1">Visualize todos os agendamentos da frota</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Calendário de Reservas</h1>
+          <p className="text-sm text-muted-foreground mt-1">Visualize todos os agendamentos da frota</p>
         </div>
         <Link
           href="/reservas/nova"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+          className="bg-primary text-primary-foreground hover:opacity-90 px-4 py-2 rounded-lg transition-opacity font-medium text-sm"
         >
           + Nova Reserva
         </Link>

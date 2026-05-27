@@ -27,10 +27,10 @@ const STATUS_LABELS: Record<StatusReserva, string> = {
 }
 
 const STATUS_BADGE_CLASSES: Record<StatusReserva, string> = {
-  confirmada: 'bg-blue-100 text-blue-800 border-blue-200',
-  em_andamento: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  finalizada: 'bg-green-100 text-green-800 border-green-200',
-  cancelada: 'bg-red-100 text-red-800 border-red-200',
+  confirmada: 'badge-info',
+  em_andamento: 'badge-warning',
+  finalizada: 'badge-success',
+  cancelada: 'badge-danger',
 }
 
 function formatDate(dateStr: string): string {
@@ -85,8 +85,8 @@ export function AdminReservasClient({ reservas, usuario }: AdminReservasClientPr
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Todas as Reservas</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Todas as Reservas</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Visualize e gerencie todas as reservas de veículos
         </p>
       </div>
@@ -118,47 +118,45 @@ export function AdminReservasClient({ reservas, usuario }: AdminReservasClientPr
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">
+        <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
           Nenhuma reserva encontrada.
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto">
+        <div className="rounded-xl border border-border bg-card text-card-foreground overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Funcionário</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Veículo</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Destino</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Saída</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Retorno Previsto</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Ações</th>
+              <tr className="border-b border-border bg-muted/60">
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Funcionário</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Veículo</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Destino</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Saída</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Retorno Previsto</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ações</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((r, i) => (
                 <tr
                   key={r.id}
-                  className={`border-b border-gray-100 last:border-0 ${
-                    i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                  } hover:bg-blue-50/30 transition-colors`}
+                  className={`border-b border-border last:border-0 ${
+                    i % 2 === 0 ? '' : 'bg-muted/30'
+                  } hover:bg-accent/40 transition-colors`}
                 >
-                  <td className="px-4 py-3 text-gray-800 font-medium">{r.usuario.nome}</td>
-                  <td className="px-4 py-3 text-gray-700">
+                  <td className="px-4 py-3 text-foreground font-medium">{r.usuario.nome}</td>
+                  <td className="px-4 py-3 text-foreground/80">
                     <span>{r.veiculo.modelo}</span>
-                    <span className="ml-1 font-mono text-xs text-gray-500">({r.veiculo.placa})</span>
+                    <span className="ml-1 font-mono text-xs text-muted-foreground">({r.veiculo.placa})</span>
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{r.destino}</td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-3 text-foreground/80">{r.destino}</td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                     {formatDate(r.data_saida)}
                   </td>
-                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                     {formatDate(r.data_retorno_prevista)}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${STATUS_BADGE_CLASSES[r.status]}`}
-                    >
+                    <span className={STATUS_BADGE_CLASSES[r.status]}>
                       {STATUS_LABELS[r.status]}
                     </span>
                   </td>
@@ -167,7 +165,7 @@ export function AdminReservasClient({ reservas, usuario }: AdminReservasClientPr
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-red-600 border-red-200 hover:bg-red-50"
+                        className="text-destructive border-destructive/30 hover:bg-destructive/10 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-950/30"
                         disabled={cancelingId === r.id}
                         onClick={() => handleCancelar(r.id)}
                       >
@@ -182,7 +180,7 @@ export function AdminReservasClient({ reservas, usuario }: AdminReservasClientPr
         </div>
       )}
 
-      <p className="text-xs text-gray-400 mt-3">
+      <p className="text-xs text-muted-foreground mt-3">
         {filtered.length} reserva{filtered.length !== 1 ? 's' : ''} exibida{filtered.length !== 1 ? 's' : ''}
         {filtered.length !== reservas.length && ` (de ${reservas.length} total)`}
       </p>

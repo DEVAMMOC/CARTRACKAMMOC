@@ -50,7 +50,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
         {error}
       </div>
     )
@@ -62,7 +62,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="h-14 rounded-lg bg-gray-100 animate-pulse"
+            className="h-14 rounded-lg bg-muted animate-pulse"
             aria-hidden
           />
         ))}
@@ -72,7 +72,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
 
   if (users.length === 0) {
     return (
-      <p className="text-sm text-gray-500 px-2 py-6 text-center">
+      <p className="text-sm text-muted-foreground px-2 py-6 text-center">
         Nenhum usuário encontrado.
       </p>
     )
@@ -81,14 +81,14 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
   return (
     <>
       {/* Desktop table */}
-      <div className="hidden sm:block rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="hidden sm:block rounded-xl border border-border bg-card text-card-foreground overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Nome</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Papel</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">Ações</th>
+            <tr className="bg-muted/60 border-b border-border">
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nome</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Papel</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -98,25 +98,17 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
               return (
                 <tr
                   key={u.id}
-                  className={`border-b border-gray-100 last:border-0 ${
-                    i % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'
-                  }`}
+                  className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-muted/30'}`}
                 >
-                  <td className="px-4 py-3 text-gray-800 font-medium">
+                  <td className="px-4 py-3 text-foreground font-medium">
                     {u.nome}
                     {isSelf && (
-                      <span className="ml-2 text-xs text-gray-400">(você)</span>
+                      <span className="ml-2 text-xs text-muted-foreground">(você)</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                  <td className="px-4 py-3 text-foreground/80">{u.email}</td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${
-                        isAdmin
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : 'bg-gray-50 text-gray-700 border-gray-200'
-                      }`}
-                    >
+                    <span className={isAdmin ? 'badge-info' : 'badge-muted'}>
                       {isAdmin ? 'Administrador' : 'Usuário'}
                     </span>
                   </td>
@@ -149,25 +141,19 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
           return (
             <li
               key={u.id}
-              className="rounded-xl border border-gray-200 bg-white p-3"
+              className="rounded-xl border border-border bg-card text-card-foreground p-3"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-gray-900 truncate">
+                  <div className="font-medium text-foreground truncate">
                     {u.nome}
                     {isSelf && (
-                      <span className="ml-2 text-xs text-gray-400 font-normal">(você)</span>
+                      <span className="ml-2 text-xs text-muted-foreground font-normal">(você)</span>
                     )}
                   </div>
-                  <div className="text-xs text-gray-500 truncate">{u.email}</div>
+                  <div className="text-xs text-muted-foreground truncate">{u.email}</div>
                 </div>
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border whitespace-nowrap ${
-                    isAdmin
-                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                      : 'bg-gray-50 text-gray-700 border-gray-200'
-                  }`}
-                >
+                <span className={isAdmin ? 'badge-info' : 'badge-muted'}>
                   {isAdmin ? 'Admin' : 'Usuário'}
                 </span>
               </div>

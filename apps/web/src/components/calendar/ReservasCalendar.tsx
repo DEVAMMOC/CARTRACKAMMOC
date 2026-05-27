@@ -61,7 +61,7 @@ export function ReservasCalendar({ reservas, onNewReservation }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-4">
+    <div className="bg-card text-card-foreground rounded-xl shadow-sm border border-border p-4">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"

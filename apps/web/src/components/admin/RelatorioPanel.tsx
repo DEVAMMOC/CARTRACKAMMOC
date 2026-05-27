@@ -86,8 +86,8 @@ export function RelatorioPanel() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Relatórios</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Gere relatórios de uso de veículos por período
         </p>
       </div>
@@ -140,7 +140,7 @@ export function RelatorioPanel() {
             </Button>
           </div>
           {error && (
-            <p className="mt-3 text-sm text-red-600">{error}</p>
+            <p className="mt-3 text-sm text-destructive">{error}</p>
           )}
         </CardContent>
       </Card>
@@ -152,28 +152,28 @@ export function RelatorioPanel() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-5">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total de Viagens</p>
-                <p className="text-3xl font-bold text-gray-900">{relatorio.total_viagens}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total de Viagens</p>
+                <p className="text-3xl font-bold text-foreground">{relatorio.total_viagens}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-5">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total de KM</p>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total de KM</p>
+                <p className="text-3xl font-bold text-foreground">
                   {relatorio.total_km.toLocaleString('pt-BR')}
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-5">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Veículos Utilizados</p>
-                <p className="text-3xl font-bold text-gray-900">{relatorio.veiculos_usados}</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Veículos Utilizados</p>
+                <p className="text-3xl font-bold text-foreground">{relatorio.veiculos_usados}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-5">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Período</p>
-                <p className="text-base font-semibold text-gray-900">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Período</p>
+                <p className="text-base font-semibold text-foreground">
                   {formatDateBR(geradoInicio)} – {formatDateBR(geradoFim)}
                 </p>
               </CardContent>
@@ -198,33 +198,31 @@ export function RelatorioPanel() {
 
           {/* Uso por Veículo */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Uso por Veículo</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3 tracking-tight">Uso por Veículo</h2>
             {relatorio.por_veiculo.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum dado disponível.</p>
+              <p className="text-sm text-muted-foreground">Nenhum dado disponível.</p>
             ) : (
-              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <div className="rounded-xl border border-border bg-card text-card-foreground overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Veículo</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Viagens</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">KM Total</th>
+                    <tr className="border-b border-border bg-muted/60">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Veículo</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Viagens</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">KM Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {relatorio.por_veiculo.map((row, i) => (
                       <tr
                         key={row.veiculo.id}
-                        className={`border-b border-gray-100 last:border-0 ${
-                          i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                        }`}
+                        className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-muted/30'}`}
                       >
-                        <td className="px-4 py-3 text-gray-800">
+                        <td className="px-4 py-3 text-foreground">
                           {row.veiculo.modelo}{' '}
-                          <span className="font-mono text-xs text-gray-500">({row.veiculo.placa})</span>
+                          <span className="font-mono text-xs text-muted-foreground">({row.veiculo.placa})</span>
                         </td>
-                        <td className="px-4 py-3 text-gray-700">{row.viagens}</td>
-                        <td className="px-4 py-3 text-gray-700">
+                        <td className="px-4 py-3 text-foreground/80">{row.viagens}</td>
+                        <td className="px-4 py-3 text-foreground/80">
                           {row.km.toLocaleString('pt-BR')} km
                         </td>
                       </tr>
@@ -237,30 +235,28 @@ export function RelatorioPanel() {
 
           {/* Uso por Funcionário */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Uso por Funcionário</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3 tracking-tight">Uso por Funcionário</h2>
             {relatorio.por_usuario.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum dado disponível.</p>
+              <p className="text-sm text-muted-foreground">Nenhum dado disponível.</p>
             ) : (
-              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <div className="rounded-xl border border-border bg-card text-card-foreground overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Funcionário</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Viagens</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">KM Total</th>
+                    <tr className="border-b border-border bg-muted/60">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Funcionário</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Viagens</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">KM Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {relatorio.por_usuario.map((row, i) => (
                       <tr
                         key={row.usuario.id}
-                        className={`border-b border-gray-100 last:border-0 ${
-                          i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                        }`}
+                        className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-muted/30'}`}
                       >
-                        <td className="px-4 py-3 text-gray-800">{row.usuario.nome}</td>
-                        <td className="px-4 py-3 text-gray-700">{row.viagens}</td>
-                        <td className="px-4 py-3 text-gray-700">
+                        <td className="px-4 py-3 text-foreground">{row.usuario.nome}</td>
+                        <td className="px-4 py-3 text-foreground/80">{row.viagens}</td>
+                        <td className="px-4 py-3 text-foreground/80">
                           {row.km.toLocaleString('pt-BR')} km
                         </td>
                       </tr>
@@ -273,28 +269,26 @@ export function RelatorioPanel() {
 
           {/* Destinos Mais Frequentes */}
           <div>
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Destinos Mais Frequentes</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3 tracking-tight">Destinos Mais Frequentes</h2>
             {relatorio.destinos_frequentes.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum dado disponível.</p>
+              <p className="text-sm text-muted-foreground">Nenhum dado disponível.</p>
             ) : (
-              <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+              <div className="rounded-xl border border-border bg-card text-card-foreground overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Destino</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-600">Quantidade</th>
+                    <tr className="border-b border-border bg-muted/60">
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Destino</th>
+                      <th className="text-left px-4 py-3 font-medium text-muted-foreground">Quantidade</th>
                     </tr>
                   </thead>
                   <tbody>
                     {relatorio.destinos_frequentes.map((row, i) => (
                       <tr
                         key={row.destino}
-                        className={`border-b border-gray-100 last:border-0 ${
-                          i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-                        }`}
+                        className={`border-b border-border last:border-0 ${i % 2 === 0 ? '' : 'bg-muted/30'}`}
                       >
-                        <td className="px-4 py-3 text-gray-800">{row.destino}</td>
-                        <td className="px-4 py-3 text-gray-700">{row.count}</td>
+                        <td className="px-4 py-3 text-foreground">{row.destino}</td>
+                        <td className="px-4 py-3 text-foreground/80">{row.count}</td>
                       </tr>
                     ))}
                   </tbody>
