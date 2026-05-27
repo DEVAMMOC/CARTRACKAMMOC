@@ -19,8 +19,6 @@ import {
 } from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
 
-const OUTRA = '__outra__'
-
 const schema = z.object({
   veiculo_id: z.string().min(1, 'Selecione um veículo'),
   data_saida: z.string().min(1, 'Informe a data/hora de saída'),
@@ -48,9 +46,11 @@ export function NovaReservaForm() {
   const router = useRouter()
   const [veiculos, setVeiculos] = useState<Veiculo[]>([])
   const [cidades, setCidades] = useState<Cidade[]>([])
+  const [cidadesError, setCidadesError] = useState<string | null>(null)
   const [disponivel, setDisponivel] = useState<boolean | null>(null)
   const [checkingDisp, setCheckingDisp] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [outraMode, setOutraMode] = useState(false)
   const [novaCidadeNome, setNovaCidadeNome] = useState('')
   const [creatingCidade, setCreatingCidade] = useState(false)
   const [cidadeError, setCidadeError] = useState<string | null>(null)
@@ -78,8 +78,15 @@ export function NovaReservaForm() {
       .then(setVeiculos)
       .catch(err => console.error('Error loading vehicles:', err))
     apiFetch<Cidade[]>('/cidades')
-      .then(setCidades)
-      .catch(err => console.error('Error loading cidades:', err))
+      .then((data) => {
+        setCidades(data)
+        setCidadesError(null)
+      })
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : 'Erro ao carregar cidades'
+        setCidadesError(msg)
+        console.error('Error loading cidades:', err)
+      })
   }, [])
 
   async function handleCreateCidade() {
@@ -95,12 +102,12 @@ export function NovaReservaForm() {
         method: 'POST',
         body: JSON.stringify({ nome }),
       })
-      // Insert into local list (or replace if dup case-insensitive)
       setCidades(prev => {
         const without = prev.filter(c => c.id !== created.id)
         return [...without, created].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
       })
       setValue('cidade_destino_id', created.id, { shouldValidate: true })
+      setOutraMode(false)
       setNovaCidadeNome('')
     } catch (err) {
       setCidadeError(err instanceof Error ? err.message : 'Erro ao criar cidade')
@@ -259,63 +266,99 @@ export function NovaReservaForm() {
       {/* Cidade de destino */}
       <div>
         <Label className="text-sm font-medium">Cidade de destino *</Label>
-        <Controller
-          name="cidade_destino_id"
-          control={control}
-          render={({ field }) => (
-            <Select
-              value={field.value || undefined}
-              onValueChange={(value) => {
-                if (value === OUTRA) {
-                  field.onChange('')
-                } else {
-                  field.onChange(value ?? '')
-                  setNovaCidadeNome('')
-                  setCidadeError(null)
-                }
-              }}
-            >
-              <SelectTrigger className="w-full mt-1">
-                <SelectValue placeholder="Selecione a cidade..." />
-              </SelectTrigger>
-              <SelectContent>
-                {cidades.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nome}
-                  </SelectItem>
-                ))}
-                <SelectItem value={OUTRA}>+ Cadastrar nova cidade...</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {errors.cidade_destino_id && (
-          <p className="text-destructive text-xs mt-1">{errors.cidade_destino_id.message}</p>
+
+        {cidadesError && (
+          <p className="text-destructive text-xs mt-1">
+            Não foi possível carregar a lista de cidades: {cidadesError}
+            {' '}<span className="text-muted-foreground">(verifique se a migration 008_create_cidades.sql foi rodada no Supabase)</span>
+          </p>
         )}
 
-        {/* "Outra..." inline create — visível quando user escolheu a opção e ainda não criou */}
-        {!cidadeId && (
-          <div className="mt-2 flex flex-col sm:flex-row gap-2">
-            <Input
-              value={novaCidadeNome}
-              onChange={(e) => {
-                setNovaCidadeNome(e.target.value)
+        {!outraMode ? (
+          <>
+            <Controller
+              name="cidade_destino_id"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value || undefined}
+                  onValueChange={(value) => {
+                    field.onChange(value ?? '')
+                    setNovaCidadeNome('')
+                    setCidadeError(null)
+                  }}
+                  disabled={!!cidadesError}
+                >
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder="Selecione a cidade..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cidades.length === 0 ? (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        Nenhuma cidade cadastrada ainda
+                      </div>
+                    ) : (
+                      cidades.map(c => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nome}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setOutraMode(true)
+                setValue('cidade_destino_id', '', { shouldValidate: false })
                 setCidadeError(null)
               }}
-              placeholder="Nome da cidade nova (ex.: Pinheiro Preto)"
-              disabled={creatingCidade}
-              maxLength={100}
-              className="flex-1"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCreateCidade}
-              disabled={creatingCidade || !novaCidadeNome.trim()}
+              className="text-xs text-primary hover:underline mt-1.5 inline-flex"
             >
-              {creatingCidade ? 'Cadastrando...' : 'Cadastrar cidade'}
-            </Button>
+              Não está na lista? Cadastrar nova cidade →
+            </button>
+          </>
+        ) : (
+          <div className="mt-1 space-y-2">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                value={novaCidadeNome}
+                onChange={(e) => {
+                  setNovaCidadeNome(e.target.value)
+                  setCidadeError(null)
+                }}
+                placeholder="Nome da cidade nova (ex.: Pinheiro Preto)"
+                disabled={creatingCidade}
+                maxLength={100}
+                className="flex-1"
+                autoFocus
+              />
+              <Button
+                type="button"
+                onClick={handleCreateCidade}
+                disabled={creatingCidade || !novaCidadeNome.trim()}
+              >
+                {creatingCidade ? 'Cadastrando...' : 'Cadastrar e usar'}
+              </Button>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setOutraMode(false)
+                setNovaCidadeNome('')
+                setCidadeError(null)
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground inline-flex"
+            >
+              ← Voltar para a lista
+            </button>
           </div>
+        )}
+
+        {errors.cidade_destino_id && !outraMode && (
+          <p className="text-destructive text-xs mt-1">{errors.cidade_destino_id.message}</p>
         )}
         {cidadeError && (
           <p className="text-destructive text-xs mt-1">{cidadeError}</p>

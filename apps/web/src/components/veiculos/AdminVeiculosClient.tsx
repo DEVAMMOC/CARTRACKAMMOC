@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/dialog'
 import { VeiculoForm } from './VeiculoForm'
 import { apiFetch } from '@/lib/api'
-import Image from 'next/image'
 
 const TIPO_LABELS: Record<string, string> = {
   carro: 'Carro',
@@ -47,22 +46,21 @@ function StatusBadge({ ativo }: { ativo: boolean }) {
   )
 }
 
-function VeiculoThumbnail({ veiculo }: { veiculo: Veiculo }) {
+function VeiculoHeroPhoto({ veiculo }: { veiculo: Veiculo }) {
+  // Hero photo no topo do card — 16:9 cobre largura inteira.
   if (veiculo.foto_url) {
     return (
-      <Image
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
         src={veiculo.foto_url}
         alt={veiculo.modelo}
-        width={48}
-        height={48}
-        className="w-12 h-12 object-cover rounded-lg border border-border flex-shrink-0"
-        unoptimized
+        className="w-full aspect-[16/9] object-cover bg-muted"
       />
     )
   }
   return (
-    <div className="w-12 h-12 rounded-lg border border-border bg-muted flex items-center justify-center text-muted-foreground flex-shrink-0">
-      <ImageIcon className="w-5 h-5" aria-hidden />
+    <div className="w-full aspect-[16/9] bg-muted flex items-center justify-center text-muted-foreground">
+      <ImageIcon className="w-10 h-10" aria-hidden />
     </div>
   )
 }
@@ -170,23 +168,19 @@ export function AdminVeiculosClient({ veiculos }: AdminVeiculosClientProps) {
                 key={v.id}
                 className="rounded-xl border border-border bg-card text-card-foreground shadow-sm flex flex-col overflow-hidden"
               >
-                <div className="p-4 flex items-center gap-3">
-                  <VeiculoThumbnail veiculo={v} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="font-mono font-bold text-base text-foreground tracking-wider truncate">
-                        {v.placa}
-                      </span>
-                      <StatusBadge ativo={v.ativo} />
-                    </div>
-                  </div>
-                </div>
+                <VeiculoHeroPhoto veiculo={v} />
 
-                <div className="px-4 pb-2">
-                  <p className="text-sm text-foreground font-medium truncate">{v.modelo}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {v.ano} · {TIPO_LABELS[v.tipo] ?? v.tipo}
-                  </p>
+                <div className="p-4 flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-foreground font-semibold truncate">{v.modelo}</p>
+                    <p className="font-mono text-xs text-muted-foreground tracking-wider mt-0.5">
+                      {v.placa}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {v.ano} · {TIPO_LABELS[v.tipo] ?? v.tipo}
+                    </p>
+                  </div>
+                  <StatusBadge ativo={v.ativo} />
                 </div>
 
                 <div className="px-4 pb-3 mt-auto">

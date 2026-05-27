@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { CameraIcon, ImageIcon, TrashIcon } from 'lucide-react'
 import { Veiculo, CriarVeiculoInput, TipoVeiculo } from '@cartracking/types'
 import { apiFetch } from '@/lib/api'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,6 +42,8 @@ interface VeiculoFormProps {
 
 export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) {
   const isEdit = veiculo !== undefined
+  const supabase = createClient()
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [placa, setPlaca] = useState(veiculo?.placa ?? '')
   const [modelo, setModelo] = useState(veiculo?.modelo ?? '')
@@ -49,9 +53,69 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
   const [ativo, setAtivo] = useState(veiculo?.ativo ?? true)
   const [fotoUrl, setFotoUrl] = useState(veiculo?.foto_url ?? '')
 
+  const [uploadingFoto, setUploadingFoto] = useState(false)
+  const [fotoError, setFotoError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({})
+
+  async function handleUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (!isEdit) {
+      setFotoError('Salve o veículo primeiro pra poder enviar foto.')
+      return
+    }
+
+    setUploadingFoto(true)
+    setFotoError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch(`/api/veiculos/${veiculo!.id}/foto`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      const json = (await res.json()) as { foto_url: string }
+      setFotoUrl(json.foto_url)
+    } catch (err) {
+      setFotoError(err instanceof Error ? err.message : 'Erro ao enviar foto')
+    } finally {
+      setUploadingFoto(false)
+    }
+  }
+
+  async function handleRemoveFoto() {
+    if (!isEdit) return
+    if (!window.confirm('Remover a foto do veículo?')) return
+    setUploadingFoto(true)
+    setFotoError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch(`/api/veiculos/${veiculo!.id}/foto`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      setFotoUrl('')
+    } catch (err) {
+      setFotoError(err instanceof Error ? err.message : 'Erro ao remover foto')
+    } finally {
+      setUploadingFoto(false)
+    }
+  }
 
   function validate(): boolean {
     const newErrors: Partial<Record<string, string>> = {}
@@ -253,14 +317,83 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
       )}
 
       <div>
-        <Label htmlFor="foto_url">Foto URL (opcional)</Label>
-        <Input
-          id="foto_url"
-          value={fotoUrl}
-          onChange={(e) => setFotoUrl(e.target.value)}
-          placeholder="https://..."
-          className="mt-1"
-        />
+        <Label className="text-sm font-medium">Foto do veículo</Label>
+        <div className="mt-1 flex items-start gap-3">
+          {/* Preview */}
+          <div className="relative w-28 h-28 rounded-lg border border-border bg-muted/40 overflow-hidden flex items-center justify-center flex-shrink-0">
+            {fotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={fotoUrl}
+                alt={modelo || 'Foto do veículo'}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <ImageIcon className="w-8 h-8 text-muted-foreground" aria-hidden />
+            )}
+            {uploadingFoto && (
+              <span className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="w-6 h-6 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              </span>
+            )}
+          </div>
+
+          {/* Controles */}
+          <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleUploadFoto}
+            />
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingFoto || !isEdit}
+              >
+                <CameraIcon className="w-3.5 h-3.5 mr-1.5" aria-hidden />
+                {uploadingFoto ? 'Enviando...' : fotoUrl ? 'Trocar foto' : 'Enviar foto'}
+              </Button>
+              {fotoUrl && isEdit && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRemoveFoto}
+                  disabled={uploadingFoto}
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-950/30"
+                >
+                  <TrashIcon className="w-3.5 h-3.5 mr-1.5" aria-hidden />
+                  Remover
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {isEdit
+                ? 'PNG, JPG ou WebP. Máximo 4 MB.'
+                : 'Salve o veículo primeiro pra liberar o upload da foto.'}
+            </p>
+            {fotoError && <p className="text-destructive text-xs">{fotoError}</p>}
+          </div>
+        </div>
+
+        {/* URL manual como fallback — útil pra colar foto já hospedada */}
+        <details className="mt-2">
+          <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+            Ou colar URL de uma foto já hospedada
+          </summary>
+          <Input
+            id="foto_url"
+            value={fotoUrl}
+            onChange={(e) => setFotoUrl(e.target.value)}
+            placeholder="https://..."
+            className="mt-2"
+          />
+        </details>
       </div>
 
       {error && (
