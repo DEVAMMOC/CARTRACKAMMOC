@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { apiFetch } from '@/lib/api'
-import { Veiculo } from '@cartracking/types'
+import { Veiculo, Cidade } from '@cartracking/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,11 +19,14 @@ import {
 } from '@/components/ui/select'
 import { useRouter } from 'next/navigation'
 
+const OUTRA = '__outra__'
+
 const schema = z.object({
   veiculo_id: z.string().min(1, 'Selecione um veículo'),
   data_saida: z.string().min(1, 'Informe a data/hora de saída'),
   data_retorno_prevista: z.string().min(1, 'Informe o retorno previsto'),
-  destino: z.string().min(3, 'Informe o destino (mínimo 3 caracteres)'),
+  cidade_destino_id: z.string().min(1, 'Selecione a cidade de destino'),
+  endereco_destino: z.string().optional().or(z.literal('')),
   servico: z.string().min(3, 'Informe o serviço (mínimo 3 caracteres)'),
 }).refine(
   data => !data.data_saida || !data.data_retorno_prevista ||
@@ -44,28 +47,67 @@ const TIPO_LABELS: Record<string, string> = {
 export function NovaReservaForm() {
   const router = useRouter()
   const [veiculos, setVeiculos] = useState<Veiculo[]>([])
+  const [cidades, setCidades] = useState<Cidade[]>([])
   const [disponivel, setDisponivel] = useState<boolean | null>(null)
   const [checkingDisp, setCheckingDisp] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [novaCidadeNome, setNovaCidadeNome] = useState('')
+  const [creatingCidade, setCreatingCidade] = useState(false)
+  const [cidadeError, setCidadeError] = useState<string | null>(null)
 
   const {
     register,
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: { veiculo_id: '' } })
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { veiculo_id: '', cidade_destino_id: '' },
+  })
 
   const veiculoId = watch('veiculo_id')
   const dataSaida = watch('data_saida')
   const dataRetorno = watch('data_retorno_prevista')
+  const cidadeId = watch('cidade_destino_id')
 
-  // Load vehicles on mount
+  // Load vehicles + cities on mount
   useEffect(() => {
     apiFetch<Veiculo[]>('/veiculos')
       .then(setVeiculos)
       .catch(err => console.error('Error loading vehicles:', err))
+    apiFetch<Cidade[]>('/cidades')
+      .then(setCidades)
+      .catch(err => console.error('Error loading cidades:', err))
   }, [])
+
+  async function handleCreateCidade() {
+    const nome = novaCidadeNome.trim()
+    if (!nome) {
+      setCidadeError('Digite o nome da cidade')
+      return
+    }
+    setCreatingCidade(true)
+    setCidadeError(null)
+    try {
+      const created = await apiFetch<Cidade>('/cidades', {
+        method: 'POST',
+        body: JSON.stringify({ nome }),
+      })
+      // Insert into local list (or replace if dup case-insensitive)
+      setCidades(prev => {
+        const without = prev.filter(c => c.id !== created.id)
+        return [...without, created].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+      })
+      setValue('cidade_destino_id', created.id, { shouldValidate: true })
+      setNovaCidadeNome('')
+    } catch (err) {
+      setCidadeError(err instanceof Error ? err.message : 'Erro ao criar cidade')
+    } finally {
+      setCreatingCidade(false)
+    }
+  }
 
   // Check availability when vehicle/dates change
   useEffect(() => {
@@ -214,17 +256,83 @@ export function NovaReservaForm() {
         </div>
       )}
 
-      {/* Destination */}
+      {/* Cidade de destino */}
       <div>
-        <Label className="text-sm font-medium">Destino *</Label>
+        <Label className="text-sm font-medium">Cidade de destino *</Label>
+        <Controller
+          name="cidade_destino_id"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value || undefined}
+              onValueChange={(value) => {
+                if (value === OUTRA) {
+                  field.onChange('')
+                } else {
+                  field.onChange(value ?? '')
+                  setNovaCidadeNome('')
+                  setCidadeError(null)
+                }
+              }}
+            >
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Selecione a cidade..." />
+              </SelectTrigger>
+              <SelectContent>
+                {cidades.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.nome}
+                  </SelectItem>
+                ))}
+                <SelectItem value={OUTRA}>+ Cadastrar nova cidade...</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.cidade_destino_id && (
+          <p className="text-destructive text-xs mt-1">{errors.cidade_destino_id.message}</p>
+        )}
+
+        {/* "Outra..." inline create — visível quando user escolheu a opção e ainda não criou */}
+        {!cidadeId && (
+          <div className="mt-2 flex flex-col sm:flex-row gap-2">
+            <Input
+              value={novaCidadeNome}
+              onChange={(e) => {
+                setNovaCidadeNome(e.target.value)
+                setCidadeError(null)
+              }}
+              placeholder="Nome da cidade nova (ex.: Pinheiro Preto)"
+              disabled={creatingCidade}
+              maxLength={100}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCreateCidade}
+              disabled={creatingCidade || !novaCidadeNome.trim()}
+            >
+              {creatingCidade ? 'Cadastrando...' : 'Cadastrar cidade'}
+            </Button>
+          </div>
+        )}
+        {cidadeError && (
+          <p className="text-destructive text-xs mt-1">{cidadeError}</p>
+        )}
+      </div>
+
+      {/* Endereço dentro da cidade (opcional) */}
+      <div>
+        <Label className="text-sm font-medium">Endereço no destino</Label>
         <Input
-          {...register('destino')}
-          placeholder="Ex: Secretaria Municipal de Saúde — Rua das Flores, 123"
+          {...register('endereco_destino')}
+          placeholder="Ex.: Secretaria Municipal de Saúde — Rua das Flores, 123"
           className="mt-1"
         />
-        {errors.destino && (
-          <p className="text-destructive text-xs mt-1">{errors.destino.message}</p>
-        )}
+        <p className="text-xs text-muted-foreground mt-1">
+          Opcional. Detalhe do local dentro da cidade selecionada.
+        </p>
       </div>
 
       {/* Service */}

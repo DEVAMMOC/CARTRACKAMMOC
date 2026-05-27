@@ -28,6 +28,12 @@ export interface Veiculo {
   atualizado_em: string
 }
 
+export interface Cidade {
+  id: string
+  nome: string
+  criado_em: string
+}
+
 export interface Reserva {
   id: string
   veiculo_id: string
@@ -35,7 +41,12 @@ export interface Reserva {
   data_saida: string
   data_retorno_prevista: string
   data_retorno_real: string | null
+  /** Texto legado: "<cidade> — <endereço>" para compatibilidade com listas/cards/relatórios. */
   destino: string
+  /** Cidade catalogada — referencia `cidades.id`. Nullable em reservas legadas. */
+  cidade_destino_id: string | null
+  /** Endereço/rua dentro da cidade. Nullable em reservas legadas. */
+  endereco_destino: string | null
   servico: string
   km_saida: number | null
   km_retorno: number | null
@@ -46,6 +57,7 @@ export interface Reserva {
   atualizado_em: string
   veiculo?: Veiculo
   usuario?: Usuario
+  cidade_destino?: Cidade | null
 }
 
 export interface ReservaComDetalhes extends Reserva {
@@ -57,8 +69,13 @@ export interface CriarReservaInput {
   veiculo_id: string
   data_saida: string
   data_retorno_prevista: string
-  destino: string
+  cidade_destino_id: string
+  endereco_destino?: string
   servico: string
+}
+
+export interface CriarCidadeInput {
+  nome: string
 }
 
 export interface FinalizarViagemInput {
@@ -80,6 +97,7 @@ export interface RelatorioFiltros {
   fim: string
   veiculo_id?: string
   usuario_id?: string
+  cidade_destino_id?: string
 }
 
 export interface RelatorioData {

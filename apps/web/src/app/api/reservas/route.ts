@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   const supabase = createAdminClient()
   let query = supabase
     .from('reservas')
-    .select('*, veiculo:veiculos(*), usuario:usuarios(*)')
+    .select('*, veiculo:veiculos(*), usuario:usuarios(*), cidade_destino:cidades(*)')
     .order('data_saida', { ascending: false })
 
   if (user.papel === 'funcionario') {
@@ -32,9 +32,18 @@ export async function POST(req: Request) {
   const user = auth.user
 
   const body = (await req.json().catch(() => ({}))) as Partial<CriarReservaInput>
-  if (!body.veiculo_id || !body.data_saida || !body.data_retorno_prevista || !body.destino || !body.servico) {
+  if (
+    !body.veiculo_id ||
+    !body.data_saida ||
+    !body.data_retorno_prevista ||
+    !body.cidade_destino_id ||
+    !body.servico
+  ) {
     return NextResponse.json(
-      { error: 'veiculo_id, data_saida, data_retorno_prevista, destino e servico são obrigatórios' },
+      {
+        error:
+          'veiculo_id, data_saida, data_retorno_prevista, cidade_destino_id e servico são obrigatórios',
+      },
       { status: 400 }
     )
   }
@@ -47,6 +56,20 @@ export async function POST(req: Request) {
   }
 
   const supabase = createAdminClient()
+
+  // Resolve the city name to compose the legacy `destino` text field.
+  const { data: cidade } = await supabase
+    .from('cidades')
+    .select('id, nome')
+    .eq('id', body.cidade_destino_id)
+    .single()
+
+  if (!cidade) {
+    return NextResponse.json({ error: 'Cidade de destino não encontrada' }, { status: 404 })
+  }
+
+  const enderecoTrimmed = (body.endereco_destino ?? '').trim()
+  const destinoLegacy = enderecoTrimmed ? `${cidade.nome} — ${enderecoTrimmed}` : cidade.nome
 
   const { data: conflicts } = await supabase
     .from('reservas')
@@ -77,12 +100,18 @@ export async function POST(req: Request) {
   const { data, error } = await supabase
     .from('reservas')
     .insert({
-      ...body,
+      veiculo_id: body.veiculo_id,
+      data_saida: body.data_saida,
+      data_retorno_prevista: body.data_retorno_prevista,
+      cidade_destino_id: body.cidade_destino_id,
+      endereco_destino: enderecoTrimmed || null,
+      destino: destinoLegacy,
+      servico: body.servico,
       usuario_id: user.id,
       km_saida: veiculo.km_atual,
       status: 'confirmada',
     })
-    .select('*, veiculo:veiculos(*), usuario:usuarios(*)')
+    .select('*, veiculo:veiculos(*), usuario:usuarios(*), cidade_destino:cidades(*)')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
