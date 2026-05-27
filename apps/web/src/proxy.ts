@@ -37,5 +37,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // Exclude /api/v1/* from the auth proxy — those endpoints authenticate via
+  // X-API-Key for external consumers (Power BI, scripts, sibling systems) and
+  // must NOT be redirected to /login.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/v1|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
