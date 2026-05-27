@@ -5,6 +5,7 @@ import { Usuario } from '@cartracking/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProfileForm } from '@/components/configuracoes/ProfileForm'
 import { UserManagement } from '@/components/configuracoes/UserManagement'
+import { ThemeSelect } from '@/components/ui/theme-select'
 
 export default async function ConfiguracoesPage() {
   const supabase = await createClient()
@@ -33,11 +34,23 @@ export default async function ConfiguracoesPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configurações</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Configurações</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Gerencie seu perfil e preferências da conta
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Aparência</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Escolha o tema da interface. &quot;Sistema&quot; segue a preferência do seu dispositivo.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ThemeSelect />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -52,7 +65,7 @@ export default async function ConfiguracoesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Gerenciar perfis</CardTitle>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Promova ou remova administradores do sistema
             </p>
           </CardHeader>
