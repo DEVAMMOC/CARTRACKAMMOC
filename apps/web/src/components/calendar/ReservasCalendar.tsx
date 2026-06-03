@@ -20,9 +20,10 @@ const STATUS_OPACITY: Record<StatusReserva, number> = {
 interface Props {
   reservas: ReservaComDetalhes[]
   onNewReservation: () => void
+  onDateClick: (dateStr: string) => void
 }
 
-export function ReservasCalendar({ reservas, onNewReservation }: Props) {
+export function ReservasCalendar({ reservas, onNewReservation, onDateClick }: Props) {
   const vehicleColorMap = new Map<string, string>()
   let colorIdx = 0
 
@@ -77,6 +78,7 @@ export function ReservasCalendar({ reservas, onNewReservation }: Props) {
           week: 'Semana',
         }}
         events={events}
+        dateClick={({ dateStr }) => onDateClick(dateStr)}
         eventClick={handleEventClick}
         eventDidMount={({ event, el }) => {
           const r: ReservaComDetalhes = event.extendedProps.reserva

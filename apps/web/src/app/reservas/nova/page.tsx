@@ -1,6 +1,12 @@
 import { NovaReservaForm } from '@/components/reservas/NovaReservaForm'
 
-export default function NovaReservaPage() {
+export default async function NovaReservaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ data_saida?: string }>
+}) {
+  const { data_saida } = await searchParams
+
   return (
     <div>
       <div className="mb-6">
@@ -9,7 +15,7 @@ export default function NovaReservaPage() {
           Selecione o veículo, período e informe o destino
         </p>
       </div>
-      <NovaReservaForm />
+      <NovaReservaForm defaultDataSaida={data_saida} />
     </div>
   )
 }

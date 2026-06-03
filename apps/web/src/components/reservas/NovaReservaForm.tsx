@@ -42,7 +42,7 @@ const TIPO_LABELS: Record<string, string> = {
   outro: 'Outro',
 }
 
-export function NovaReservaForm() {
+export function NovaReservaForm({ defaultDataSaida }: { defaultDataSaida?: string }) {
   const router = useRouter()
   const [veiculos, setVeiculos] = useState<Veiculo[]>([])
   const [cidades, setCidades] = useState<Cidade[]>([])
@@ -64,7 +64,7 @@ export function NovaReservaForm() {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { veiculo_id: '', cidade_destino_id: '' },
+    defaultValues: { veiculo_id: '', cidade_destino_id: '', data_saida: defaultDataSaida ?? '' },
   })
 
   const veiculoId = watch('veiculo_id')
