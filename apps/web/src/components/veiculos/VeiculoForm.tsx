@@ -259,7 +259,7 @@ export function VeiculoForm({ veiculo, onSuccess, onCancel }: VeiculoFormProps) 
       <div>
         <Label htmlFor="tipo">Tipo *</Label>
         <div className="mt-1">
-          <Select value={tipo} onValueChange={(v) => setTipo(v as TipoVeiculo)}>
+          <Select items={TIPO_OPTIONS} value={tipo} onValueChange={(v) => setTipo(v as TipoVeiculo)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>

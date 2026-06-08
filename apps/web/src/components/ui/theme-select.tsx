@@ -10,6 +10,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+// Base UI <Select.Value> shows the raw value unless Root gets `items` mapping
+// value -> label (e.g. "system" -> "Sistema").
+const THEME_ITEMS = [
+  { value: 'system', label: 'Sistema' },
+  { value: 'light', label: 'Claro' },
+  { value: 'dark', label: 'Escuro' },
+]
+
 export function ThemeSelect() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -18,6 +26,7 @@ export function ThemeSelect() {
 
   return (
     <Select
+      items={THEME_ITEMS}
       value={mounted ? theme ?? 'system' : 'system'}
       onValueChange={(value) => setTheme(value ?? 'system')}
       disabled={!mounted}

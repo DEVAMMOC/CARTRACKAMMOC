@@ -162,6 +162,14 @@ export function NovaReservaForm({ defaultDataSaida }: { defaultDataSaida?: strin
 
   const selectedVeiculo = veiculos.find(v => v.id === veiculoId)
 
+  // Base UI <Select.Value> shows the raw value (UUID) unless Root gets `items`
+  // mapping value -> label. These selects use UUID values, so the map is required.
+  const veiculoItems = veiculos.map(v => ({
+    value: v.id,
+    label: `${v.modelo} (${v.placa}) — ${TIPO_LABELS[v.tipo] ?? v.tipo}`,
+  }))
+  const cidadeItems = cidades.map(c => ({ value: c.id, label: c.nome }))
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-xl space-y-5">
       {/* Vehicle selector */}
@@ -172,6 +180,7 @@ export function NovaReservaForm({ defaultDataSaida }: { defaultDataSaida?: strin
           control={control}
           render={({ field }) => (
             <Select
+              items={veiculoItems}
               value={field.value || undefined}
               onValueChange={(value) => field.onChange(value ?? '')}
             >
@@ -281,6 +290,7 @@ export function NovaReservaForm({ defaultDataSaida }: { defaultDataSaida?: strin
               control={control}
               render={({ field }) => (
                 <Select
+                  items={cidadeItems}
                   value={field.value || undefined}
                   onValueChange={(value) => {
                     field.onChange(value ?? '')

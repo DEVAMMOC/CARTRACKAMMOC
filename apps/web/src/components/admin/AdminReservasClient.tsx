@@ -33,6 +33,15 @@ const STATUS_BADGE_CLASSES: Record<StatusReserva, string> = {
   cancelada: 'badge-danger',
 }
 
+// Base UI <Select.Value> shows the raw value unless Root gets `items` mapping
+// value -> label (e.g. "em_andamento" -> "Em Andamento").
+const STATUS_FILTER_ITEMS = [
+  { value: 'all', label: 'Todos os status' },
+  ...(Object.entries(STATUS_LABELS) as [StatusReserva, string][]).map(
+    ([value, label]) => ({ value, label })
+  ),
+]
+
 function formatDate(dateStr: string): string {
   try {
     return new Date(dateStr).toLocaleString('pt-BR', {
@@ -100,6 +109,7 @@ export function AdminReservasClient({ reservas, usuario }: AdminReservasClientPr
           className="sm:max-w-xs"
         />
         <Select
+          items={STATUS_FILTER_ITEMS}
           value={statusFilter}
           onValueChange={val => setStatusFilter(val as StatusReserva | 'all')}
         >

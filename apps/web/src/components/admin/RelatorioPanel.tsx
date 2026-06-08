@@ -74,6 +74,13 @@ export function RelatorioPanel() {
     }
   }
 
+  // Base UI <Select.Value> shows the raw value unless Root gets `items` mapping
+  // value -> label. The vehicle options use UUID values, so the map is required.
+  const veiculoItems = [
+    { value: 'all', label: 'Todos os veículos' },
+    ...veiculos.map(v => ({ value: v.id, label: `${v.modelo} (${v.placa})` })),
+  ]
+
   function buildExportUrl(format: 'excel' | 'pdf'): string {
     let url = `${API_URL}/relatorios/exportar/${format}?inicio=${geradoInicio}&fim=${geradoFim}`
     if (veiculoId && veiculoId !== 'all') {
@@ -121,7 +128,7 @@ export function RelatorioPanel() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="veiculo">Veículo</Label>
-              <Select value={veiculoId} onValueChange={val => setVeiculoId(val ?? 'all')}>
+              <Select items={veiculoItems} value={veiculoId} onValueChange={val => setVeiculoId(val ?? 'all')}>
                 <SelectTrigger id="veiculo" className="w-52">
                   <SelectValue placeholder="Todos os veículos" />
                 </SelectTrigger>
