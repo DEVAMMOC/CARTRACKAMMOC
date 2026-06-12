@@ -48,6 +48,8 @@ export interface Reserva {
   /** Endereço/rua dentro da cidade. Nullable em reservas legadas. */
   endereco_destino: string | null
   servico: string
+  /** Beneficiário/passageiro da viagem, quando diferente de quem marcou. Nullable. */
+  reservado_para: string | null
   km_saida: number | null
   km_retorno: number | null
   observacoes: string | null
@@ -72,6 +74,8 @@ export interface CriarReservaInput {
   cidade_destino_id: string
   endereco_destino?: string
   servico: string
+  /** Beneficiário/passageiro, quando diferente de quem marca. Opcional. */
+  reservado_para?: string
 }
 
 export interface CriarCidadeInput {
