@@ -71,7 +71,10 @@ export interface CriarReservaInput {
   veiculo_id: string
   data_saida: string
   data_retorno_prevista: string
-  cidade_destino_id: string
+  /** Cidade de destino por id. Use isto OU `cidade_destino_nome`. */
+  cidade_destino_id?: string
+  /** Cidade de destino por nome (resolvida case-insensitive; criada se nova). */
+  cidade_destino_nome?: string
   endereco_destino?: string
   servico: string
   /** Beneficiário/passageiro, quando diferente de quem marca. Opcional. */

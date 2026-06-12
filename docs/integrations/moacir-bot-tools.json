@@ -1,0 +1,111 @@
+{
+  "name": "ammoc_frotas",
+  "description": "Ferramentas para o Moacir consultar e marcar viagens no sistema de veículos da AMMOC, em nome de um funcionário.",
+  "base_url": "https://frota.ammoc.org.br/api/v1/bot",
+  "auth": {
+    "header": "X-API-Key",
+    "value": "{{BOT_API_KEY}}",
+    "note": "Todas as requisições enviam X-API-Key. As ferramentas de escrita enviam também X-Acting-User (e-mail ou telefone do funcionário em nome de quem a ação é feita)."
+  },
+  "conventions": {
+    "datetime": "ISO 8601 UTC, ex.: 2026-06-20T12:00:00Z",
+    "error_shape": "{ \"error\": \"mensagem\" }",
+    "status_codes": { "400": "dados inválidos", "401": "chave inválida", "403": "sem permissão/inativo", "404": "não encontrado", "409": "conflito de agenda", "500": "erro interno" }
+  },
+  "tools": [
+    {
+      "name": "status_agora",
+      "method": "GET",
+      "path": "/status",
+      "needs_acting_user": false,
+      "description": "Foto em tempo real: quem está em viagem agora (em_viagem) e próximas viagens agendadas (agendadas).",
+      "params": {}
+    },
+    {
+      "name": "listar_veiculos",
+      "method": "GET",
+      "path": "/veiculos",
+      "needs_acting_user": false,
+      "description": "Lista a frota com km_atual, tipo, ativo e flag em_viagem (se está numa viagem em andamento agora).",
+      "params": {}
+    },
+    {
+      "name": "listar_cidades",
+      "method": "GET",
+      "path": "/cidades",
+      "needs_acting_user": false,
+      "description": "Lista as cidades de destino cadastradas (id + nome). Use para obter o cidade_destino_id ao criar reserva.",
+      "params": {}
+    },
+    {
+      "name": "listar_reservas",
+      "method": "GET",
+      "path": "/reservas",
+      "needs_acting_user": false,
+      "description": "Lista reservas com veículo, funcionário e cidade. Filtros opcionais combináveis.",
+      "params": {
+        "status": "opcional: confirmada|em_andamento|finalizada|cancelada",
+        "funcionario": "opcional: e-mail do funcionário dono da reserva",
+        "inicio": "opcional: ISO, janela sobre data_saida",
+        "fim": "opcional: ISO, janela sobre data_saida"
+      }
+    },
+    {
+      "name": "checar_disponibilidade",
+      "method": "GET",
+      "path": "/disponibilidade",
+      "needs_acting_user": false,
+      "description": "Indica se o veículo está livre no período. Retorna { disponivel: boolean }.",
+      "params": {
+        "veiculo_id": "obrigatório",
+        "inicio": "obrigatório: ISO",
+        "fim": "obrigatório: ISO"
+      }
+    },
+    {
+      "name": "criar_reserva",
+      "method": "POST",
+      "path": "/reservas",
+      "needs_acting_user": true,
+      "description": "Agenda uma viagem em nome do funcionário (X-Acting-User). Retorna 201 com a reserva (status confirmada).",
+      "body": {
+        "veiculo_id": "obrigatório: id do veículo",
+        "data_saida": "obrigatório: ISO",
+        "data_retorno_prevista": "obrigatório: ISO, posterior à saída",
+        "cidade_destino_id": "obrigatório (ou cidade_destino_nome): id da cidade — PREFIRA isto",
+        "cidade_destino_nome": "alternativa ao id: nome da cidade (cria se não existir — risco de duplicata)",
+        "servico": "obrigatório: finalidade da viagem",
+        "endereco_destino": "opcional: local dentro da cidade",
+        "reservado_para": "opcional: beneficiário/passageiro, quando a viagem é para outra pessoa"
+      }
+    },
+    {
+      "name": "iniciar_viagem",
+      "method": "PATCH",
+      "path": "/reservas/{id}/iniciar",
+      "needs_acting_user": true,
+      "description": "Marca a saída. A reserva precisa estar 'confirmada' (vira 'em_andamento'). Sem body.",
+      "path_params": { "id": "id da reserva" }
+    },
+    {
+      "name": "finalizar_viagem",
+      "method": "PATCH",
+      "path": "/reservas/{id}/finalizar",
+      "needs_acting_user": true,
+      "description": "Marca o retorno. km_retorno deve ser >= km_saida. Atualiza automaticamente a km_atual do veículo.",
+      "path_params": { "id": "id da reserva" },
+      "body": {
+        "km_retorno": "obrigatório: inteiro (km do painel no retorno)",
+        "observacoes": "opcional: texto"
+      }
+    },
+    {
+      "name": "cancelar_reserva",
+      "method": "DELETE",
+      "path": "/reservas/{id}",
+      "needs_acting_user": true,
+      "description": "Cancela a reserva (não funciona se já finalizada). Retorna { ok: true }.",
+      "path_params": { "id": "id da reserva" }
+    }
+  ]
+}

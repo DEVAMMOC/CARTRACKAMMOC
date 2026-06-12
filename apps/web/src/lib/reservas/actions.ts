@@ -20,21 +20,62 @@ export type ActionResult<T> = { data: T } | { error: string; status: number }
 
 const RESERVA_SELECT = '*, veiculo:veiculos(*), usuario:usuarios(*), cidade_destino:cidades(*)'
 
+/**
+ * Resolve a destination city from either an id or a name. By id: must exist.
+ * By name: matched case-insensitively, created if new (same behaviour as the
+ * web form's "outra cidade"). Returns `{ id, nome }` or null.
+ */
+async function resolveCidade(
+  supabase: SupabaseClient,
+  id: string | undefined,
+  nome: string
+): Promise<{ id: string; nome: string } | null> {
+  if (id) {
+    const { data } = await supabase.from('cidades').select('id, nome').eq('id', id).single()
+    return data ?? null
+  }
+  if (!nome) return null
+
+  const { data: existing } = await supabase
+    .from('cidades')
+    .select('id, nome')
+    .ilike('nome', nome)
+    .maybeSingle()
+  if (existing) return existing
+
+  const { data: created, error } = await supabase
+    .from('cidades')
+    .insert({ nome })
+    .select('id, nome')
+    .single()
+  if (error) {
+    // Race: another insert won; fetch the now-existing row.
+    const { data: now } = await supabase
+      .from('cidades')
+      .select('id, nome')
+      .ilike('nome', nome)
+      .maybeSingle()
+    return now ?? null
+  }
+  return created
+}
+
 export async function criarReserva(
   supabase: SupabaseClient,
   user: Usuario,
   input: Partial<CriarReservaInput>
 ): Promise<ActionResult<ReservaComDetalhes>> {
+  const cidadeNome = (input.cidade_destino_nome ?? '').trim()
   if (
     !input.veiculo_id ||
     !input.data_saida ||
     !input.data_retorno_prevista ||
-    !input.cidade_destino_id ||
+    (!input.cidade_destino_id && !cidadeNome) ||
     !input.servico
   ) {
     return {
       error:
-        'veiculo_id, data_saida, data_retorno_prevista, cidade_destino_id e servico são obrigatórios',
+        'veiculo_id, data_saida, data_retorno_prevista, servico e (cidade_destino_id ou cidade_destino_nome) são obrigatórios',
       status: 400,
     }
   }
@@ -43,13 +84,9 @@ export async function criarReserva(
     return { error: 'data_retorno_prevista deve ser posterior à data_saida', status: 400 }
   }
 
-  // Resolve the city name to compose the legacy `destino` text field.
-  const { data: cidade } = await supabase
-    .from('cidades')
-    .select('id, nome')
-    .eq('id', input.cidade_destino_id)
-    .single()
-
+  // Resolve the destination city (by id, or by name — creating it if new, like
+  // the web form's "outra cidade"). Needed to compose the legacy `destino` text.
+  const cidade = await resolveCidade(supabase, input.cidade_destino_id, cidadeNome)
   if (!cidade) {
     return { error: 'Cidade de destino não encontrada', status: 404 }
   }
@@ -87,7 +124,7 @@ export async function criarReserva(
       veiculo_id: input.veiculo_id,
       data_saida: input.data_saida,
       data_retorno_prevista: input.data_retorno_prevista,
-      cidade_destino_id: input.cidade_destino_id,
+      cidade_destino_id: cidade.id,
       endereco_destino: enderecoTrimmed || null,
       destino: destinoLegacy,
       servico: input.servico,
