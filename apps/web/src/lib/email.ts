@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import type { ReservaComDetalhes } from '@cartracking/types'
 import { createAdminClient } from './supabase/admin'
+import { getConfiguracaoNotificacao } from './configuracoes'
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'AMMOC Frotas <avisos@ammoc.org.br>'
 
@@ -108,6 +109,12 @@ export async function sendConfirmacaoEmail(reserva: ReservaComDetalhes): Promise
   const resend = getResend()
   if (!resend) {
     console.warn('[email] RESEND_API_KEY not set — skipping confirmation email')
+    return
+  }
+
+  const config = await getConfiguracaoNotificacao(createAdminClient())
+  if (!config.email_confirmacao_ativo) {
+    console.log('[email] e-mail de confirmação desativado nas configurações — pulando')
     return
   }
 

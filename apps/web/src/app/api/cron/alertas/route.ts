@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server'
 import type { ReservaComDetalhes } from '@cartracking/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendAlertaNaoFinalizadaEmail } from '@/lib/email'
+import { getConfiguracaoNotificacao } from '@/lib/configuracoes'
+
+/** Hora atual (0-23) no fuso de Brasília. */
+function horaBrasilia(): number {
+  const h = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    hour: 'numeric',
+    hour12: false,
+  }).format(new Date())
+  return parseInt(h, 10) % 24
+}
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,6 +40,29 @@ export async function GET(req: Request) {
   const supabase = createAdminClient()
   const startedAt = new Date().toISOString()
   console.log(`[cron] ${startedAt} — checking unfinalized trips`)
+
+  // Configuração de quando enviar (definida em /admin/notificacoes). O Coolify
+  // dispara este endpoint de hora em hora; aqui decidimos se é o momento certo.
+  const config = await getConfiguracaoNotificacao(supabase)
+  const force =
+    new URL(req.url).searchParams.get('force') === 'true' ||
+    new URL(req.url).searchParams.get('force') === '1'
+
+  if (!config.alerta_nao_finalizada_ativo) {
+    return NextResponse.json({
+      ok: true,
+      processed: 0,
+      message: 'Alerta de corrida não finalizada está desativado nas configurações.',
+    })
+  }
+
+  if (!force && horaBrasilia() !== config.alerta_hora_local) {
+    return NextResponse.json({
+      ok: true,
+      processed: 0,
+      message: `Fora do horário configurado (agora ${horaBrasilia()}h BRT, configurado para ${config.alerta_hora_local}h).`,
+    })
+  }
 
   const nowIso = new Date().toISOString()
 

@@ -90,6 +90,16 @@ export interface IniciarViagemInput {
   km_inicial: number
 }
 
+export interface ConfiguracaoNotificacao {
+  /** Liga/desliga o alerta de corrida não finalizada. */
+  alerta_nao_finalizada_ativo: boolean
+  /** Hora do dia (0-23, horário de Brasília) em que o alerta diário é enviado. */
+  alerta_hora_local: number
+  /** Liga/desliga o e-mail de confirmação ao criar uma reserva. */
+  email_confirmacao_ativo: boolean
+  atualizado_em?: string
+}
+
 export interface FinalizarViagemInput {
   km_retorno: number
   observacoes?: string

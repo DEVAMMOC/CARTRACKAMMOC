@@ -18,8 +18,8 @@ export async function GET(req: Request) {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('notificacoes_email')
-    .select('id, reserva_id, tipo, destinatario, sucesso, erro, criado_em')
-    .order('criado_em', { ascending: false })
+    .select('id, reserva_id, tipo, destinatario, sucesso, erro, criado_em:enviado_em')
+    .order('enviado_em', { ascending: false })
     .limit(100)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

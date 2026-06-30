@@ -1,7 +1,144 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { ConfiguracaoNotificacao } from '@cartracking/types'
 import { apiFetch } from '@/lib/api'
+
+function ConfigEnviosCard() {
+  const [config, setConfig] = useState<ConfiguracaoNotificacao | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [salvo, setSalvo] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    apiFetch<ConfiguracaoNotificacao>('/admin/configuracoes')
+      .then((c) => {
+        if (alive) setConfig(c)
+      })
+      .catch((e: unknown) => {
+        if (alive) setErr(e instanceof Error ? e.message : 'Erro ao carregar configuração')
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  async function salvar() {
+    if (!config) return
+    setSaving(true)
+    setErr(null)
+    setSalvo(false)
+    try {
+      const saved = await apiFetch<ConfiguracaoNotificacao>('/admin/configuracoes', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          alerta_nao_finalizada_ativo: config.alerta_nao_finalizada_ativo,
+          alerta_hora_local: config.alerta_hora_local,
+          email_confirmacao_ativo: config.email_confirmacao_ativo,
+        }),
+      })
+      setConfig(saved)
+      setSalvo(true)
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Erro ao salvar')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">Configuração de envios</h2>
+        <p className="text-sm text-muted-foreground mt-0.5">Defina quando os e-mails são enviados.</p>
+      </div>
+
+      {err && (
+        <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-3 py-2 text-sm">
+          {err}
+        </div>
+      )}
+
+      {!config ? (
+        <div className="h-28 rounded-lg bg-muted animate-pulse" aria-hidden />
+      ) : (
+        <div className="space-y-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config.alerta_nao_finalizada_ativo}
+              onChange={(e) => setConfig({ ...config, alerta_nao_finalizada_ativo: e.target.checked })}
+              className="mt-1 h-4 w-4 accent-primary"
+            />
+            <span>
+              <span className="block text-sm font-medium text-foreground">
+                Alerta de corrida não finalizada
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                E-mail ao responsável (e gestores) com o link para finalizar a corrida que passou do
+                retorno previsto.
+              </span>
+            </span>
+          </label>
+
+          <div
+            className={config.alerta_nao_finalizada_ativo ? '' : 'opacity-50 pointer-events-none'}
+          >
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Horário do alerta (horário de Brasília)
+            </label>
+            <select
+              value={config.alerta_hora_local}
+              onChange={(e) => setConfig({ ...config, alerta_hora_local: Number(e.target.value) })}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              {Array.from({ length: 24 }, (_, h) => (
+                <option key={h} value={h}>
+                  {String(h).padStart(2, '0')}:00
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Todo dia nesse horário o sistema verifica e avisa as corridas não finalizadas.
+            </p>
+          </div>
+
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config.email_confirmacao_ativo}
+              onChange={(e) => setConfig({ ...config, email_confirmacao_ativo: e.target.checked })}
+              className="mt-1 h-4 w-4 accent-primary"
+            />
+            <span>
+              <span className="block text-sm font-medium text-foreground">
+                E-mail de confirmação de reserva
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                Enviado automaticamente ao criar uma reserva.
+              </span>
+            </span>
+          </label>
+
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              type="button"
+              onClick={salvar}
+              disabled={saving}
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60"
+            >
+              {saving ? 'Salvando...' : 'Salvar configuração'}
+            </button>
+            {salvo && (
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Salvo ✓</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface Notificacao {
   id: string
@@ -68,6 +205,8 @@ export function NotificacoesClient() {
           Atualizar
         </button>
       </div>
+
+      <ConfigEnviosCard />
 
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900 px-4 py-3 text-sm">
