@@ -85,6 +85,11 @@ export interface CriarCidadeInput {
   nome: string
 }
 
+export interface IniciarViagemInput {
+  /** KM do hodômetro no momento da retirada do veículo. */
+  km_inicial: number
+}
+
 export interface FinalizarViagemInput {
   km_retorno: number
   observacoes?: string

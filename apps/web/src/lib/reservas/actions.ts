@@ -148,11 +148,12 @@ export async function criarReserva(
 export async function iniciarViagem(
   supabase: SupabaseClient,
   user: Usuario,
-  id: string
+  id: string,
+  input: { km_inicial?: number } = {}
 ): Promise<ActionResult<unknown>> {
   const { data: reserva } = await supabase
     .from('reservas')
-    .select('usuario_id, status')
+    .select('usuario_id, status, veiculo_id')
     .eq('id', id)
     .single()
 
@@ -167,9 +168,67 @@ export async function iniciarViagem(
     }
   }
 
+  // KM do hodômetro na retirada — passa a ser a fonte da verdade da quilometragem,
+  // em vez de depender de alguém lembrar de finalizar a corrida anterior.
+  const km = input.km_inicial
+  if (km == null || !Number.isFinite(km) || km <= 0) {
+    return {
+      error: 'km_inicial (KM do hodômetro na retirada) é obrigatório e deve ser positivo',
+      status: 400,
+    }
+  }
+
+  const { data: veiculo } = await supabase
+    .from('veiculos')
+    .select('km_atual')
+    .eq('id', reserva.veiculo_id)
+    .single()
+  if (!veiculo) return { error: 'Veículo não encontrado', status: 404 }
+
+  // O hodômetro não diminui — se a leitura vier menor que o KM atual, é erro de digitação.
+  if (veiculo.km_atual != null && km < veiculo.km_atual) {
+    return {
+      error: `KM informado (${km.toLocaleString('pt-BR')}) é menor que o KM atual do veículo (${veiculo.km_atual.toLocaleString('pt-BR')}). Confira a leitura do hodômetro.`,
+      status: 400,
+    }
+  }
+
+  const nowIso = new Date().toISOString()
+
+  // Handoff auto-corretivo: qualquer corrida deste veículo que ficou em andamento
+  // (ninguém finalizou) é fechada agora com esta leitura como KM de retorno. Assim
+  // o próximo usuário nunca fica travado e o KM nunca fica defasado.
+  const { data: abertas } = await supabase
+    .from('reservas')
+    .select('id, km_saida')
+    .eq('veiculo_id', reserva.veiculo_id)
+    .eq('status', 'em_andamento')
+    .neq('id', id)
+
+  for (const aberta of abertas ?? []) {
+    const kmRetorno = aberta.km_saida != null && km < aberta.km_saida ? aberta.km_saida : km
+    await supabase
+      .from('reservas')
+      .update({
+        status: 'finalizada',
+        km_retorno: kmRetorno,
+        data_retorno_real: nowIso,
+        observacoes: 'Finalizada automaticamente na retirada do próximo usuário (handoff).',
+        atualizado_em: nowIso,
+      })
+      .eq('id', aberta.id)
+  }
+
+  // O veículo passa a refletir a leitura física do hodômetro.
+  await supabase
+    .from('veiculos')
+    .update({ km_atual: km, atualizado_em: nowIso })
+    .eq('id', reserva.veiculo_id)
+
+  // Inicia a corrida com km_saida = leitura real (sobrescreve o snapshot da criação).
   const { data, error } = await supabase
     .from('reservas')
-    .update({ status: 'em_andamento', atualizado_em: new Date().toISOString() })
+    .update({ status: 'em_andamento', km_saida: km, atualizado_em: nowIso })
     .eq('id', id)
     .select()
     .single()

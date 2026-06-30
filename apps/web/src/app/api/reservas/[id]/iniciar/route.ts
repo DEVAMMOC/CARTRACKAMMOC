@@ -13,7 +13,8 @@ export async function PATCH(
   if (auth.response) return auth.response
 
   const { id } = await context.params
-  const result = await iniciarViagem(createAdminClient(), auth.user, id)
+  const body = (await req.json().catch(() => ({}))) as { km_inicial?: number }
+  const result = await iniciarViagem(createAdminClient(), auth.user, id, body)
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   return NextResponse.json(result.data)
 }

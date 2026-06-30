@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ReservaComDetalhes, StatusReserva } from '@cartracking/types'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { apiFetch } from '@/lib/api'
 
 const STATUS_LABELS: Record<StatusReserva, string> = {
@@ -45,13 +47,29 @@ interface ReservaCardProps {
 
 export function ReservaCard({ reserva }: ReservaCardProps) {
   const router = useRouter()
+  const [iniciando, setIniciando] = useState(false)
+  const [kmInicial, setKmInicial] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  async function handleIniciar() {
+  async function confirmarIniciar() {
+    const km = Number(kmInicial)
+    if (!Number.isFinite(km) || km <= 0) {
+      alert('Informe o KM do hodômetro na retirada.')
+      return
+    }
+    setLoading(true)
     try {
-      await apiFetch(`/reservas/${reserva.id}/iniciar`, { method: 'PATCH' })
+      await apiFetch(`/reservas/${reserva.id}/iniciar`, {
+        method: 'PATCH',
+        body: JSON.stringify({ km_inicial: km }),
+      })
+      setIniciando(false)
+      setKmInicial('')
       router.refresh()
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : 'Erro ao iniciar viagem')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -132,25 +150,70 @@ export function ReservaCard({ reserva }: ReservaCardProps) {
       </CardContent>
 
       {(reserva.status === 'confirmada' || reserva.status === 'em_andamento') && (
-        <CardFooter className="flex gap-2 flex-wrap">
-          {reserva.status === 'confirmada' && (
-            <Button size="sm" onClick={handleIniciar}>
-              Iniciar Viagem
-            </Button>
+        <CardFooter className="flex flex-col items-stretch gap-2">
+          {reserva.status === 'confirmada' && !iniciando && (
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" onClick={() => setIniciando(true)}>
+                Iniciar Viagem
+              </Button>
+              <Button size="sm" variant="destructive" onClick={handleCancelar}>
+                Cancelar
+              </Button>
+            </div>
+          )}
+
+          {reserva.status === 'confirmada' && iniciando && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">KM do hodômetro na retirada *</label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={kmInicial}
+                onChange={(e) => setKmInicial(e.target.value)}
+                placeholder={
+                  reserva.veiculo.km_atual != null
+                    ? `Atual no sistema: ${reserva.veiculo.km_atual.toLocaleString('pt-BR')} km`
+                    : 'KM atual do painel'
+                }
+                autoFocus
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground">
+                Confira o painel do veículo. Esse valor vira o KM de saída e atualiza a frota —
+                e fecha automaticamente uma corrida anterior que não tenha sido finalizada.
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={confirmarIniciar} disabled={loading} className="flex-1">
+                  {loading ? 'Iniciando...' : 'Confirmar saída'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setIniciando(false)
+                    setKmInicial('')
+                  }}
+                  disabled={loading}
+                >
+                  Voltar
+                </Button>
+              </div>
+            </div>
           )}
 
           {reserva.status === 'em_andamento' && (
-            <Link
-              href={`/reservas/${reserva.id}/finalizar`}
-              className={buttonVariants({ variant: 'default', size: 'sm' })}
-            >
-              Finalizar Viagem
-            </Link>
+            <div className="flex gap-2 flex-wrap">
+              <Link
+                href={`/reservas/${reserva.id}/finalizar`}
+                className={buttonVariants({ variant: 'default', size: 'sm' })}
+              >
+                Finalizar Viagem
+              </Link>
+              <Button size="sm" variant="destructive" onClick={handleCancelar}>
+                Cancelar
+              </Button>
+            </div>
           )}
-
-          <Button size="sm" variant="destructive" onClick={handleCancelar}>
-            Cancelar
-          </Button>
         </CardFooter>
       )}
     </Card>

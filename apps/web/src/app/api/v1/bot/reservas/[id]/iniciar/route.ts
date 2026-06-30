@@ -21,7 +21,8 @@ export async function PATCH(
   if (acting.response) return acting.response
 
   const { id } = await context.params
-  const result = await iniciarViagem(supabase, acting.user, id)
+  const body = (await req.json().catch(() => ({}))) as { km_inicial?: number }
+  const result = await iniciarViagem(supabase, acting.user, id, body)
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   return NextResponse.json(result.data)
 }
