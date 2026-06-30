@@ -14,6 +14,7 @@ export async function GET(req: Request) {
   const { data, error } = await supabase
     .from('usuarios')
     .select('*')
+    .neq('ativo', false)
     .order('nome')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
