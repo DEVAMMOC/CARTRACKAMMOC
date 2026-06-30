@@ -37,8 +37,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Exclude /api/v1/* from the auth proxy — those endpoints authenticate via
-  // X-API-Key for external consumers (Power BI, scripts, sibling systems) and
-  // must NOT be redirected to /login.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/v1|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // Exclude /api/v1/* (X-API-Key para consumidores externos) e /api/cron/* (cron
+  // autentica via Bearer CRON_SECRET) do proxy de auth — esses endpoints fazem a
+  // própria autenticação e NÃO podem ser redirecionados para /login.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/v1|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

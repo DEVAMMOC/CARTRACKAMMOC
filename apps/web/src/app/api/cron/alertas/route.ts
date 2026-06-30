@@ -32,10 +32,14 @@ export async function GET(req: Request) {
 
   const nowIso = new Date().toISOString()
 
+  // Pega qualquer reserva ainda em aberto (confirmada OU em andamento) cujo
+  // retorno previsto já passou e que ainda não foi finalizada/cancelada — ou
+  // seja, o sistema não identificou a finalização da corrida. Inclui as que
+  // nunca foram "iniciadas" mas já deveriam ter sido concluídas.
   const { data: rows, error: reservasError } = await supabase
     .from('reservas')
     .select('*, veiculo:veiculos(*), usuario:usuarios(*)')
-    .eq('status', 'em_andamento')
+    .in('status', ['confirmada', 'em_andamento'])
     .lt('data_retorno_prevista', nowIso)
     .eq('alerta_nao_finalizada_enviado', false)
 
